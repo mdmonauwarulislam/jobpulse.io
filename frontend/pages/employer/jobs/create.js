@@ -1,27 +1,27 @@
-import { useState } from 'react';
-import { useRouter } from 'next/router';
-import Head from 'next/head';
-import { motion } from 'framer-motion';
-import { useForm } from 'react-hook-form';
-import { toast } from 'react-hot-toast';
-import { 
-  FaBriefcase, 
-  FaMapMarkerAlt, 
-  FaDollarSign, 
-  FaClock, 
+import { useState } from "react";
+import { useRouter } from "next/router";
+import Head from "next/head";
+import { motion } from "framer-motion";
+import { useForm } from "react-hook-form";
+import { toast } from "react-hot-toast";
+import {
+  FaBriefcase,
+  FaMapMarkerAlt,
+  FaDollarSign,
+  FaClock,
   FaEdit,
   FaSave,
-  FaArrowLeft
-} from 'react-icons/fa';
-import { useAuth } from '../../contexts/AuthContext';
-import { api } from '../../utils/api';
+  FaArrowLeft,
+} from "react-icons/fa";
+import { useAuth } from "../../contexts/AuthContext";
+import { api } from "../../utils/api";
 
 export default function CreateJob() {
   const router = useRouter();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [jobType, setJobType] = useState('full-time');
-  const [experienceLevel, setExperienceLevel] = useState('entry');
+  const [jobType, setJobType] = useState("full-time");
+  const [experienceLevel, setExperienceLevel] = useState("entry");
 
   const {
     register,
@@ -30,29 +30,29 @@ export default function CreateJob() {
     watch,
   } = useForm();
 
-  const salaryMin = watch('salaryMin');
-  const salaryMax = watch('salaryMax');
+  const salaryMin = watch("salaryMin");
+  const salaryMax = watch("salaryMax");
 
   const jobTypes = [
-    { value: 'full-time', label: 'Full Time' },
-    { value: 'part-time', label: 'Part Time' },
-    { value: 'contract', label: 'Contract' },
-    { value: 'internship', label: 'Internship' },
-    { value: 'freelance', label: 'Freelance' }
+    { value: "full-time", label: "Full Time" },
+    { value: "part-time", label: "Part Time" },
+    { value: "contract", label: "Contract" },
+    { value: "internship", label: "Internship" },
+    { value: "freelance", label: "Freelance" },
   ];
 
   const experienceLevels = [
-    { value: 'entry', label: 'Entry Level' },
-    { value: 'junior', label: 'Junior' },
-    { value: 'mid', label: 'Mid Level' },
-    { value: 'senior', label: 'Senior' },
-    { value: 'lead', label: 'Lead' },
-    { value: 'executive', label: 'Executive' }
+    { value: "entry", label: "Entry Level" },
+    { value: "junior", label: "Junior" },
+    { value: "mid", label: "Mid Level" },
+    { value: "senior", label: "Senior" },
+    { value: "lead", label: "Lead" },
+    { value: "executive", label: "Executive" },
   ];
 
   const onSubmit = async (data) => {
-    if (!user || user.role !== 'employer') {
-      toast.error('Only employers can post jobs');
+    if (!user || user.role !== "employer") {
+      toast.error("Only employers can post jobs");
       return;
     }
 
@@ -64,19 +64,24 @@ export default function CreateJob() {
         experienceLevel,
         salaryMin: parseInt(data.salaryMin),
         salaryMax: parseInt(data.salaryMax),
-        requirements: data.requirements.split('\n').filter(req => req.trim()),
-        benefits: data.benefits.split('\n').filter(benefit => benefit.trim()),
-        skills: data.skills.split(',').map(skill => skill.trim()).filter(skill => skill)
+        requirements: data.requirements.split("\n").filter((req) => req.trim()),
+        benefits: data.benefits.split("\n").filter((benefit) => benefit.trim()),
+        skills: data.skills
+          .split(",")
+          .map((skill) => skill.trim())
+          .filter((skill) => skill),
       };
 
-      const response = await api.post('/jobs', jobData);
+      const response = await api.post("/jobs", jobData);
 
       if (response.data.success) {
-        toast.success('Job posted successfully!');
-        router.push('/employer/dashboard');
+        toast.success("Job posted successfully!");
+        router.push("/employer/dashboard");
       }
     } catch (error) {
-      const message = error.response?.data?.message || 'Failed to post job. Please try again.';
+      const message =
+        error.response?.data?.message ||
+        "Failed to post job. Please try again.";
       toast.error(message);
     } finally {
       setLoading(false);
@@ -87,7 +92,10 @@ export default function CreateJob() {
     <>
       <Head>
         <title>Post a Job - JobPulse</title>
-        <meta name="description" content="Create a new job posting on JobPulse" />
+        <meta
+          name="description"
+          content="Create a new job posting on JobPulse"
+        />
       </Head>
 
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -97,7 +105,10 @@ export default function CreateJob() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center space-x-3 mb-2">
-                  <Link href="/employer/dashboard" className="text-primary-600 hover:text-primary-500">
+                  <Link
+                    href="/employer/dashboard"
+                    className="text-primary-600 hover:text-primary-500"
+                  >
                     <FaArrowLeft className="text-xl" />
                   </Link>
                   <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -126,7 +137,7 @@ export default function CreateJob() {
                       <FaBriefcase className="mr-2 text-primary-500" />
                       Basic Information
                     </h2>
-                    
+
                     <div className="grid md:grid-cols-2 gap-6">
                       {/* Job Title */}
                       <div className="md:col-span-2">
@@ -134,11 +145,12 @@ export default function CreateJob() {
                           Job Title *
                         </label>
                         <input
-                          {...register('title', {
-                            required: 'Job title is required',
+                          {...register("title", {
+                            required: "Job title is required",
                             minLength: {
                               value: 3,
-                              message: 'Job title must be at least 3 characters',
+                              message:
+                                "Job title must be at least 3 characters",
                             },
                           })}
                           type="text"
@@ -146,7 +158,9 @@ export default function CreateJob() {
                           placeholder="e.g., Senior Software Engineer"
                         />
                         {errors.title && (
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.title.message}</p>
+                          <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                            {errors.title.message}
+                          </p>
                         )}
                       </div>
 
@@ -196,8 +210,8 @@ export default function CreateJob() {
                             <FaMapMarkerAlt className="h-5 w-5 text-gray-400" />
                           </div>
                           <input
-                            {...register('location', {
-                              required: 'Location is required',
+                            {...register("location", {
+                              required: "Location is required",
                             })}
                             type="text"
                             className="input-field pl-10"
@@ -205,7 +219,9 @@ export default function CreateJob() {
                           />
                         </div>
                         {errors.location && (
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.location.message}</p>
+                          <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                            {errors.location.message}
+                          </p>
                         )}
                       </div>
 
@@ -214,10 +230,7 @@ export default function CreateJob() {
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           Remote Work
                         </label>
-                        <select
-                          {...register('remote')}
-                          className="input-field"
-                        >
+                        <select {...register("remote")} className="input-field">
                           <option value="no">No Remote</option>
                           <option value="hybrid">Hybrid</option>
                           <option value="full">Fully Remote</option>
@@ -232,18 +245,18 @@ export default function CreateJob() {
                       <FaDollarSign className="mr-2 text-primary-500" />
                       Salary Information
                     </h2>
-                    
+
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           Minimum Salary (USD) *
                         </label>
                         <input
-                          {...register('salaryMin', {
-                            required: 'Minimum salary is required',
+                          {...register("salaryMin", {
+                            required: "Minimum salary is required",
                             min: {
                               value: 0,
-                              message: 'Salary must be positive',
+                              message: "Salary must be positive",
                             },
                           })}
                           type="number"
@@ -251,7 +264,9 @@ export default function CreateJob() {
                           placeholder="50000"
                         />
                         {errors.salaryMin && (
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.salaryMin.message}</p>
+                          <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                            {errors.salaryMin.message}
+                          </p>
                         )}
                       </div>
 
@@ -260,15 +275,18 @@ export default function CreateJob() {
                           Maximum Salary (USD) *
                         </label>
                         <input
-                          {...register('salaryMax', {
-                            required: 'Maximum salary is required',
+                          {...register("salaryMax", {
+                            required: "Maximum salary is required",
                             min: {
                               value: 0,
-                              message: 'Salary must be positive',
+                              message: "Salary must be positive",
                             },
                             validate: (value) => {
-                              if (salaryMin && parseInt(value) < parseInt(salaryMin)) {
-                                return 'Maximum salary must be greater than minimum salary';
+                              if (
+                                salaryMin &&
+                                parseInt(value) < parseInt(salaryMin)
+                              ) {
+                                return "Maximum salary must be greater than minimum salary";
                               }
                               return true;
                             },
@@ -278,7 +296,9 @@ export default function CreateJob() {
                           placeholder="80000"
                         />
                         {errors.salaryMax && (
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-400}>{errors.salaryMax.message}</p>
+                          <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                            {errors.salaryMax.message}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -290,17 +310,18 @@ export default function CreateJob() {
                       <FaEdit className="mr-2 text-primary-500" />
                       Job Description
                     </h2>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Job Description *
                       </label>
                       <textarea
-                        {...register('description', {
-                          required: 'Job description is required',
+                        {...register("description", {
+                          required: "Job description is required",
                           minLength: {
                             value: 50,
-                            message: 'Description must be at least 50 characters',
+                            message:
+                              "Description must be at least 50 characters",
                           },
                         })}
                         rows="8"
@@ -308,7 +329,9 @@ export default function CreateJob() {
                         placeholder="Describe the role, responsibilities, and what makes this position exciting..."
                       />
                       {errors.description && (
-                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.description.message}</p>
+                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                          {errors.description.message}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -319,14 +342,14 @@ export default function CreateJob() {
                       <FaEdit className="mr-2 text-primary-500" />
                       Requirements & Skills
                     </h2>
-                    
+
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           Requirements (one per line)
                         </label>
                         <textarea
-                          {...register('requirements')}
+                          {...register("requirements")}
                           rows="6"
                           className="input-field"
                           placeholder="• 3+ years of experience in React
@@ -341,7 +364,7 @@ export default function CreateJob() {
                           Required Skills (comma-separated)
                         </label>
                         <input
-                          {...register('skills')}
+                          {...register("skills")}
                           type="text"
                           className="input-field"
                           placeholder="React, JavaScript, Node.js, Express, MongoDB"
@@ -356,13 +379,13 @@ export default function CreateJob() {
                       <FaEdit className="mr-2 text-primary-500" />
                       Benefits & Perks
                     </h2>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Benefits (one per line)
                       </label>
                       <textarea
-                        {...register('benefits')}
+                        {...register("benefits")}
                         rows="6"
                         className="input-field"
                         placeholder="• Competitive salary and equity
@@ -380,17 +403,17 @@ export default function CreateJob() {
                       <FaClock className="mr-2 text-primary-500" />
                       Application Settings
                     </h2>
-                    
+
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           Application Deadline
                         </label>
                         <input
-                          {...register('deadline')}
+                          {...register("deadline")}
                           type="date"
                           className="input-field"
-                          min={new Date().toISOString().split('T')[0]}
+                          min={new Date().toISOString().split("T")[0]}
                         />
                       </div>
 
@@ -399,7 +422,7 @@ export default function CreateJob() {
                           Application URL (Optional)
                         </label>
                         <input
-                          {...register('applicationUrl')}
+                          {...register("applicationUrl")}
                           type="url"
                           className="input-field"
                           placeholder="https://company.com/apply"
@@ -410,14 +433,11 @@ export default function CreateJob() {
 
                   {/* Submit Buttons */}
                   <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
-                    <Link
-                      href="/employer/dashboard"
-                      className="btn-outline"
-                    >
+                    <Link href="/employer/dashboard" className="btn-outline">
                       <FaArrowLeft className="mr-2" />
                       Cancel
                     </Link>
-                    
+
                     <button
                       type="submit"
                       disabled={loading}
@@ -428,7 +448,7 @@ export default function CreateJob() {
                       ) : (
                         <FaSave className="mr-2" />
                       )}
-                      {loading ? 'Posting Job...' : 'Post Job'}
+                      {loading ? "Posting Job..." : "Post Job"}
                     </button>
                   </div>
                 </form>
@@ -439,4 +459,4 @@ export default function CreateJob() {
       </div>
     </>
   );
-} 
+}

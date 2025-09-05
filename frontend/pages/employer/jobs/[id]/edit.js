@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import Head from 'next/head';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
@@ -382,7 +383,7 @@ export default function EditJob() {
                           placeholder="80000"
                         />
                         {errors.salaryMax && (
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-400}>{errors.salaryMax.message}</p>
+                          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.salaryMax.message}</p>
                         )}
                       </div>
                     </div>

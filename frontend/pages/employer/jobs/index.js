@@ -15,8 +15,8 @@ import {
   FaSearch,
   FaFilter
 } from 'react-icons/fa';
-import { useAuth } from '../../contexts/AuthContext';
-import { api } from '../../utils/api';
+import { useAuth } from '../../../contexts/AuthContext';
+import { api } from '../../../utils/api';
 
 export default function EmployerJobs() {
   const { user } = useAuth();
