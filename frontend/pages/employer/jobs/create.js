@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 import Head from "next/head";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
@@ -13,8 +14,8 @@ import {
   FaSave,
   FaArrowLeft,
 } from "react-icons/fa";
-import { useAuth } from "../../contexts/AuthContext";
-import { api } from "../../utils/api";
+import { useAuth } from "../../../contexts/AuthContext";
+import { api } from "../../../utils/api";
 
 export default function CreateJob() {
   const router = useRouter();
