@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { motion } from 'framer-motion';
-import { FaShield, FaEye, FaLock, FaUserCheck } from 'react-icons/fa';
+import { FaShieldAlt, FaEye, FaLock, FaUserCheck } from 'react-icons/fa';
 
 export default function Privacy() {
   const sections = [
@@ -28,7 +28,7 @@ export default function Privacy() {
     },
     {
       title: 'Information Sharing',
-      icon: FaShield,
+      icon: FaShieldAlt,
       content: [
         'We do not sell your personal information',
         'We may share information with employers when you apply',
@@ -67,7 +67,7 @@ export default function Privacy() {
             className="text-center mb-12"
           >
             <div className="flex justify-center mb-4">
-              <FaShield className="text-6xl text-primary-500" />
+              <FaShieldAlt className="text-6xl text-primary-500" />
             </div>
             <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
               Privacy Policy

@@ -5,7 +5,7 @@ import { toast } from 'react-hot-toast';
 import { 
   FaUser, 
   FaBell, 
-  FaShield, 
+  FaShieldAlt, 
   FaPalette, 
   FaEnvelope,
   FaSave,
@@ -48,7 +48,7 @@ export default function Settings() {
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: FaUser },
-    { id: 'security', label: 'Security', icon: FaShield },
+    { id: 'security', label: 'Security', icon: FaShieldAlt },
     { id: 'notifications', label: 'Notifications', icon: FaBell },
     { id: 'appearance', label: 'Appearance', icon: FaPalette }
   ];
@@ -281,7 +281,7 @@ export default function Settings() {
                 <div className="card">
                   <div className="card-body p-8">
                     <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
-                      <FaShield className="mr-3 text-primary-500" />
+                      <FaShieldAlt className="mr-3 text-primary-500" />
                       Security Settings
                     </h2>
 
