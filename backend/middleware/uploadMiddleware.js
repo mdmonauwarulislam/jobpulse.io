@@ -47,8 +47,8 @@ const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: parseInt(process.env.MAX_FILE_SIZE) || 5 * 1024 * 1024, // 5MB default
-    files: 1 // Only one file at a time
+    fileSize: parseInt(process.env.MAX_FILE_SIZE) || 5 * 1024 * 1024, 
+    files: 1 
   }
 });
 
@@ -64,7 +64,7 @@ const uploadMultiple = multer({
   fileFilter: fileFilter,
   limits: {
     fileSize: parseInt(process.env.MAX_FILE_SIZE) || 5 * 1024 * 1024,
-    files: 5 // Up to 5 files
+    files: 5 
   }
 }).array('files', 5);
 

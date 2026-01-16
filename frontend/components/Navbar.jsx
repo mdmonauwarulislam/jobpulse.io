@@ -14,7 +14,8 @@ import {
   FaHome,
   FaBuilding,
   FaInfoCircle,
-  FaEnvelope
+  FaEnvelope,
+  FaComments
 } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -43,14 +44,19 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
       icon: FaUser,
     },
     {
-      name: 'Settings',
-      href: '/settings',
-      icon: FaCog,
+      name: 'Messages',
+      href: '/messages',
+      icon: FaComments,
     },
     {
       name: 'Notifications',
       href: '/notifications',
       icon: FaBell,
+    },
+    {
+      name: 'Settings',
+      href: '/settings',
+      icon: FaCog,
     },
   ];
 

@@ -1,7 +1,11 @@
 const Employer = require('../models/Employer');
-const Job = require('../models/Job'); // Import Job model to query for employer's jobs
+const Job = require('../models/Job');
+const Application = require('../models/Application');
+const Notification = require('../models/Notification');
+const Conversation = require('../models/Conversation');
+const Message = require('../models/Message');
 const asyncHandler = require('../utils/asyncHandler');
-const { deleteFile, getFileUrl } = require('../middleware/uploadMiddleware'); // Assuming logo uploads use similar functions
+const { deleteFile, getFileUrl } = require('../middleware/uploadMiddleware');
 
 /**
  * @desc Get employer profile
@@ -9,7 +13,6 @@ const { deleteFile, getFileUrl } = require('../middleware/uploadMiddleware'); //
  * @access Private (Employer Only)
  */
 const getEmployerProfile = asyncHandler(async (req, res) => {
-  // req.user is populated by 'protect' middleware and is an Employer document
   const employer = await Employer.findById(req.user._id)
     .select('-password -verificationToken -resetPasswordToken -resetPasswordExpire -isAdminApproved');
 
@@ -30,7 +33,7 @@ const getEmployerProfile = asyncHandler(async (req, res) => {
  */
 const updateEmployerProfile = asyncHandler(async (req, res) => {
   const {
-    name, // Contact person name
+    name,
     company,
     companyDescription,
     companyWebsite,
@@ -44,7 +47,6 @@ const updateEmployerProfile = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, error: 'Employer not found.' });
   }
 
-  // Update fields if provided
   if (name !== undefined) employer.name = name;
   if (company !== undefined) employer.company = company;
   if (companyDescription !== undefined) employer.companyDescription = companyDescription;
@@ -52,12 +54,9 @@ const updateEmployerProfile = asyncHandler(async (req, res) => {
   if (phone !== undefined) employer.phone = phone;
   if (address !== undefined) employer.address = address;
 
-  // Recalculate isProfileComplete based on the virtual
   employer.isProfileComplete = employer.profileCompletion === 100;
 
   await employer.save({ validateBeforeSave: true });
-
-  // Re-fetch to get accurate profileCompletion after save
   const updatedEmployer = await Employer.findById(employer._id)
     .select('-password -verificationToken -resetPasswordToken -resetPasswordExpire -isAdminApproved');
 
@@ -87,10 +86,9 @@ const uploadCompanyLogo = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, error: 'Employer not found.' });
   }
 
-  // Delete old logo if exists
   if (employer.companyLogo) {
     const oldFilename = employer.companyLogo.split('/').pop();
-    if (oldFilename !== req.file.filename) { // Prevent deleting if it's the same file
+    if (oldFilename !== req.file.filename) { 
       try {
         await deleteFile(oldFilename);
         console.log(`✅ Old company logo ${oldFilename} deleted.`);
@@ -101,7 +99,6 @@ const uploadCompanyLogo = asyncHandler(async (req, res) => {
   }
 
   employer.companyLogo = getFileUrl(req.file.filename);
-  // Recalculate isProfileComplete after adding logo
   employer.isProfileComplete = employer.profileCompletion === 100;
 
   await employer.save({ validateBeforeSave: true });
@@ -162,22 +159,21 @@ const deleteCompanyLogo = asyncHandler(async (req, res) => {
  */
 const getEmployerJobs = asyncHandler(async (req, res) => {
   const employerId = req.user._id;
-  const includeExpired = req.query.includeExpired === 'true'; // Convert to boolean
+  const includeExpired = req.query.includeExpired === 'true'; 
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
 
   const query = { employer: employerId };
 
-  // By default, only show active and non-expired jobs
   query.isActive = true;
   if (!includeExpired) {
-    query.applicationDeadline = { $gte: new Date() }; // Deadline is greater than or equal to now
+    query.applicationDeadline = { $gte: new Date() }; 
   }
 
   const skip = (page - 1) * limit;
 
   const jobs = await Job.find(query)
-    .sort({ createdAt: -1 }) // Newest jobs first
+    .sort({ createdAt: -1 }) 
     .skip(skip)
     .limit(limit);
 
@@ -206,14 +202,13 @@ const getEmployerJobs = asyncHandler(async (req, res) => {
  */
 const getEmployerPublicProfile = asyncHandler(async (req, res) => {
   const employer = await Employer.findById(req.params.id).select(
-    '-password -verificationToken -resetPasswordToken -resetPasswordExpire -isActive -isVerified' // Exclude sensitive fields
+    '-password -verificationToken -resetPasswordToken -resetPasswordExpire -isActive -isVerified' 
   );
 
   if (!employer) {
     return res.status(404).json({ success: false, error: 'Employer not found.' });
   }
 
-  // Optionally, you might only want to show verified and active employers
   if (!employer.isVerified || !employer.isActive) {
      return res.status(404).json({ success: false, error: 'Employer not found or not active.' });
   }
@@ -236,13 +231,10 @@ const getEmployerPublicJobs = asyncHandler(async (req, res) => {
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
 
-  // Ensure the employer exists and is active/verified before fetching jobs
   const employer = await Employer.findById(employerId);
   if (!employer || !employer.isVerified || !employer.isActive) {
     return res.status(404).json({ success: false, error: 'Employer not found or not active.' });
   }
-
-  // Only show active and non-expired jobs for public view
   const query = {
     employer: employerId,
     isActive: true,
@@ -302,7 +294,7 @@ const changeEmployerPassword = asyncHandler(async (req, res) => {
   employer.password = newPassword;
   await employer.save({ validateBeforeSave: true });
 
-  employer.clearPasswordResetToken(); // Clear any existing reset tokens
+  employer.clearPasswordResetToken(); 
   await employer.save({ validateBeforeSave: false });
 
   res.json({ success: true, message: 'Employer password changed successfully!' });
@@ -327,7 +319,6 @@ const deleteEmployerAccount = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, error: 'Incorrect password. Cannot delete account.' });
   }
 
-  // Delete company logo if exists
   if (employer.companyLogo) {
     const filename = employer.companyLogo.split('/').pop();
     try {
@@ -338,20 +329,344 @@ const deleteEmployerAccount = asyncHandler(async (req, res) => {
     }
   }
 
-  // Optionally, decide what to do with associated job postings:
-  // 1. Delete all jobs posted by this employer:
   await Job.deleteMany({ employer: req.user._id });
   console.log(`✅ All jobs posted by employer ${req.user._id} deleted.`);
-  // 2. Or, set them to inactive / mark them as from a "deleted employer"
-  //    await Job.updateMany({ employer: req.user._id }, { isActive: false, employer: null });
 
-  // Finally, delete the employer document
   await Employer.findByIdAndDelete(req.user._id);
   console.log(`✅ Employer account ${req.user._id} deleted successfully.`);
 
   res.json({ success: true, message: 'Employer account and all associated jobs deleted successfully.' });
 });
 
+/**
+ * @desc Get employer dashboard stats
+ * @route GET /api/employers/stats
+ * @access Private (Employer Only)
+ */
+const getEmployerStats = asyncHandler(async (req, res) => {
+  const employerId = req.user._id;
+  
+  const jobs = await Job.find({ employer: employerId });
+  const jobIds = jobs.map(job => job._id);
+  
+  const applications = await Application.find({ job: { $in: jobIds } });
+  
+  const stats = {
+    totalJobs: jobs.length,
+    activeJobs: jobs.filter(job => job.isActive && new Date(job.applicationDeadline) >= new Date()).length,
+    expiredJobs: jobs.filter(job => new Date(job.applicationDeadline) < new Date()).length,
+    totalApplications: applications.length,
+    pendingApplications: applications.filter(app => app.status === 'pending').length,
+    reviewedApplications: applications.filter(app => app.status === 'reviewed').length,
+    shortlistedApplications: applications.filter(app => app.status === 'shortlisted').length,
+    rejectedApplications: applications.filter(app => app.status === 'rejected').length,
+    hiredApplications: applications.filter(app => app.status === 'hired').length,
+    totalViews: jobs.reduce((sum, job) => sum + (job.views || 0), 0),
+    recentApplications: applications.filter(app => {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return new Date(app.createdAt) >= weekAgo;
+    }).length
+  };
+  
+  res.json({
+    success: true,
+    data: { stats }
+  });
+});
+
+/**
+ * @desc Get all applications for employer's jobs
+ * @route GET /api/employers/applications
+ * @access Private (Employer Only)
+ */
+const getEmployerApplications = asyncHandler(async (req, res) => {
+  const employerId = req.user._id;
+  const { page = 1, limit = 10, status, jobId, search } = req.query;
+  
+  const employerJobs = await Job.find({ employer: employerId }).select('_id');
+  const jobIds = employerJobs.map(job => job._id);
+  
+  const filter = { job: { $in: jobIds } };
+  
+  if (status && status !== 'all') {
+    filter.status = status;
+  }
+  
+  if (jobId) {
+    filter.job = jobId;
+  }
+  
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+  
+  let applicationsQuery = Application.find(filter)
+    .populate('applicant', 'name email phone summary skills experience education resumeUrl')
+    .populate('job', 'title company location jobType salary')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(parseInt(limit));
+  
+  const applications = await applicationsQuery;
+  const total = await Application.countDocuments(filter);
+  const totalPages = Math.ceil(total / parseInt(limit));
+  
+  res.json({
+    success: true,
+    data: {
+      applications,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages,
+        totalApplications: total,
+        hasNextPage: parseInt(page) < totalPages,
+        hasPrevPage: parseInt(page) > 1
+      }
+    }
+  });
+});
+
+/**
+ * @desc Get single application details
+ * @route GET /api/employers/applications/:applicationId
+ * @access Private (Employer Only)
+ */
+const getApplicationDetails = asyncHandler(async (req, res) => {
+  const { applicationId } = req.params;
+  const employerId = req.user._id;
+  
+  const application = await Application.findById(applicationId)
+    .populate('applicant', 'name email phone summary skills experience education resumeUrl address')
+    .populate({
+      path: 'job',
+      select: 'title company location jobType salary employer',
+      populate: { path: 'employer', select: 'company' }
+    });
+  
+  if (!application) {
+    return res.status(404).json({
+      success: false,
+      error: 'Application not found'
+    });
+  }
+  
+  if (application.job.employer._id.toString() !== employerId.toString()) {
+    return res.status(403).json({
+      success: false,
+      error: 'Not authorized to view this application'
+    });
+  }
+  
+  const conversation = await Conversation.findOne({ application: applicationId });
+  
+  res.json({
+    success: true,
+    data: {
+      application,
+      hasConversation: !!conversation,
+      conversationId: conversation?._id
+    }
+  });
+});
+
+/**
+ * @desc Update application status
+ * @route PUT /api/employers/applications/:applicationId/status
+ * @access Private (Employer Only)
+ */
+const updateApplicationStatus = asyncHandler(async (req, res) => {
+  const { applicationId } = req.params;
+  const { status, notes } = req.body;
+  const employerId = req.user._id;
+  
+  const application = await Application.findById(applicationId)
+    .populate('job')
+    .populate('applicant', 'name email');
+  
+  if (!application) {
+    return res.status(404).json({
+      success: false,
+      error: 'Application not found'
+    });
+  }
+  
+  if (application.job.employer.toString() !== employerId.toString()) {
+    return res.status(403).json({
+      success: false,
+      error: 'Not authorized to update this application'
+    });
+  }
+  
+  const previousStatus = application.status;
+  
+  application.status = status;
+  if (notes) {
+    application.employerNotes = notes;
+  }
+  if (status === 'reviewed' && !application.reviewedAt) {
+    application.reviewedAt = new Date();
+    application.reviewedBy = employerId;
+    application.reviewedByModel = 'Employer';
+  }
+  
+  await application.save();
+  
+  await Notification.notifyApplicationStatusChanged(
+    application.applicant._id,
+    applicationId,
+    application.job._id,
+    status,
+    application.job.title,
+    application.job.company
+  );
+  
+  if ((status === 'shortlisted' || status === 'hired') && previousStatus !== status) {
+    let conversation = await Conversation.findOne({ application: applicationId });
+    
+    if (!conversation) {
+      conversation = await Conversation.create({
+        application: applicationId,
+        job: application.job._id,
+        employer: employerId,
+        applicant: application.applicant._id,
+        initiatedBy: 'employer'
+      });
+      
+      const statusMessage = status === 'shortlisted' 
+        ? `Congratulations! Your application has been shortlisted for ${application.job.title}.`
+        : `Congratulations! You have been hired for ${application.job.title}!`;
+      
+      await Message.createSystemMessage(
+        conversation._id,
+        statusMessage,
+        'status_change',
+        { status, previousStatus }
+      );
+    }
+  }
+  
+  res.json({
+    success: true,
+    message: `Application status updated to ${status}`,
+    data: { application }
+  });
+});
+
+/**
+ * @desc Schedule interview for an application
+ * @route POST /api/employers/applications/:applicationId/interview
+ * @access Private (Employer Only)
+ */
+const scheduleInterview = asyncHandler(async (req, res) => {
+  const { applicationId } = req.params;
+  const { date, time, location, type, notes } = req.body;
+  const employerId = req.user._id;
+  
+  const application = await Application.findById(applicationId)
+    .populate('job')
+    .populate('applicant', 'name email');
+  
+  if (!application) {
+    return res.status(404).json({
+      success: false,
+      error: 'Application not found'
+    });
+  }
+  
+  if (application.job.employer.toString() !== employerId.toString()) {
+    return res.status(403).json({
+      success: false,
+      error: 'Not authorized to schedule interview for this application'
+    });
+  }
+  
+  application.interview = {
+    scheduledAt: new Date(date),
+    time,
+    location,
+    type: type || 'in-person',
+    notes
+  };
+  
+  if (application.status === 'pending' || application.status === 'reviewed') {
+    application.status = 'shortlisted';
+  }
+  
+  await application.save();
+  
+  const interviewDate = new Date(date).toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  
+  await Notification.notifyInterviewScheduled(
+    application.applicant._id,
+    applicationId,
+    application.job._id,
+    application.job.title,
+    application.job.company,
+    `${interviewDate}${time ? ` at ${time}` : ''}`
+  );
+  
+  let conversation = await Conversation.findOne({ application: applicationId });
+  
+  if (!conversation) {
+    conversation = await Conversation.create({
+      application: applicationId,
+      job: application.job._id,
+      employer: employerId,
+      applicant: application.applicant._id,
+      initiatedBy: 'employer'
+    });
+  }
+  
+  await Message.createSystemMessage(
+    conversation._id,
+    `An interview has been scheduled for ${interviewDate}${time ? ` at ${time}` : ''}${location ? ` at ${location}` : ''}${type ? ` (${type})` : ''}.`,
+    'interview_scheduled',
+    { date, time, location, type }
+  );
+  
+  res.json({
+    success: true,
+    message: 'Interview scheduled successfully',
+    data: { application, conversationId: conversation._id }
+  });
+});
+
+/**
+ * @desc Get employer by ID (public)
+ * @route GET /api/employers/public/:employerId
+ * @access Public
+ */
+const getEmployerById = asyncHandler(async (req, res) => {
+  const { employerId } = req.params;
+  
+  const employer = await Employer.findById(employerId)
+    .select('name company companyDescription companyWebsite companyLogo address');
+  
+  if (!employer) {
+    return res.status(404).json({
+      success: false,
+      error: 'Employer not found'
+    });
+  }
+  
+  const jobCount = await Job.countDocuments({ 
+    employer: employerId, 
+    isActive: true,
+    applicationDeadline: { $gte: new Date() }
+  });
+  
+  res.json({
+    success: true,
+    data: {
+      employer,
+      jobCount
+    }
+  });
+});
 
 module.exports = {
   getEmployerProfile,
@@ -362,5 +677,11 @@ module.exports = {
   getEmployerPublicProfile,
   getEmployerPublicJobs,
   changeEmployerPassword,
-  deleteEmployerAccount
+  deleteEmployerAccount,
+  getEmployerStats,
+  getEmployerApplications,
+  getApplicationDetails,
+  updateApplicationStatus,
+  scheduleInterview,
+  getEmployerById
 };

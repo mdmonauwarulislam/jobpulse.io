@@ -256,20 +256,20 @@ const userSchema = new mongoose.Schema({
   },
   isProfileComplete: {
     type: Boolean,
-    default: false // Will be updated based on profileCompletion virtual
+    default: false
   },
   role: {
     type: String,
-    enum: ['user', 'admin'], // 'user' represents a job seeker
+    enum: ['user', 'admin'], 
     default: 'user'
   }
 }, {
-  timestamps: true // Adds createdAt and updatedAt
+  timestamps: true 
 });
 
 // Virtual for profile completion percentage
 userSchema.virtual('profileCompletion').get(function() {
-  const totalRequiredFields = 6; // phone, address, summary, education, experience, skills
+  const totalRequiredFields = 6; 
   let filledFields = 0;
 
   if (this.phone && this.phone.trim().length > 0) filledFields++;
@@ -277,7 +277,7 @@ userSchema.virtual('profileCompletion').get(function() {
   if (this.summary && this.summary.trim().length > 0) filledFields++;
   if (this.education && Array.isArray(this.education) && this.education.length > 0) filledFields++;
   if (this.experience && Array.isArray(this.experience) && this.experience.length > 0) filledFields++;
-  if (this.skills && Array.isArray(this.skills) && this.skills.length > 0) filledFields++; // Now checking if skill IDs are present
+  if (this.skills && Array.isArray(this.skills) && this.skills.length > 0) filledFields++; 
 
   return Math.round((filledFields / totalRequiredFields) * 100);
 });
@@ -289,7 +289,7 @@ userSchema.set('toJSON', { virtuals: true });
 // Pre-save hook to hash password before saving (only if modified)
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) {
-    return next(); // Only hash if password was changed
+    return next(); 
   }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
@@ -304,21 +304,19 @@ userSchema.methods.generateVerificationToken = function() {
     .createHash('sha256')
     .update(verificationToken)
     .digest('hex');
-  return verificationToken; // Return the unhashed token to be sent in email
+  return verificationToken; 
 };
 
-// Generate password reset token
 userSchema.methods.generatePasswordResetToken = function() {
   const resetToken = crypto.randomBytes(32).toString('hex');
   this.resetPasswordToken = crypto
     .createHash('sha256')
     .update(resetToken)
     .digest('hex');
-  this.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 minutes from now
-  return resetToken; // Return the unhashed token to be sent in email
+  this.resetPasswordExpire = Date.now() + 10 * 60 * 1000; 
+  return resetToken; 
 };
 
-// Compare entered password with hashed password
 userSchema.methods.comparePassword = async function(enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };

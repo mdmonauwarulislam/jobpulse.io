@@ -14,7 +14,7 @@ const {
 } = require('../controllers/jobController');
 
 const {
-  getUserFromToken,
+  protect,
   requireVerification,
   requireEmployer,
   requireAdmin,
@@ -40,11 +40,11 @@ router.get('/search', searchJobs);
 router.get('/:id', optionalAuth, getJobById);
 
 // Protected routes
-router.post('/', getUserFromToken, requireVerification, requireEmployer, validateJob, createJob);
-router.put('/:id', getUserFromToken, requireVerification, validateJob, updateJob);
-router.delete('/:id', getUserFromToken, requireVerification, deleteJob);
+router.post('/', protect, requireVerification, requireEmployer, validateJob, createJob);
+router.put('/:id', protect, requireVerification, validateJob, updateJob);
+router.delete('/:id', protect, requireVerification, deleteJob);
 
 // Employer routes
-router.get('/employer/:employerId', getUserFromToken, requireVerification, getJobsByEmployer);
+router.get('/employer/:employerId', protect, requireVerification, getJobsByEmployer);
 
 module.exports = router; 

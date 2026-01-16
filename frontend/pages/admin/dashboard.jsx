@@ -11,9 +11,6 @@ import {
 } from 'react-icons/fa';
 import { api } from '../../utils/api';
 import AdminLayout from '../../components/admin/AdminLayout';
-import dynamic from 'next/dynamic';
-
-const AdminDashboardChart = dynamic(() => import('../../components/admin/AdminDashboardChart'), { ssr: false });
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -26,11 +23,7 @@ export default function AdminDashboard() {
   });
   const [recentUsers, setRecentUsers] = useState([]);
   const [recentJobs, setRecentJobs] = useState([]);
-  const [userGrowth, setUserGrowth] = useState([]);
-  const [jobGrowth, setJobGrowth] = useState([]);
-  const [applicationGrowth, setApplicationGrowth] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -38,14 +31,10 @@ export default function AdminDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      setError(null);
-      const [statsRes, usersRes, jobsRes, userGrowthRes, jobGrowthRes, applicationGrowthRes] = await Promise.all([
+      const [statsRes, usersRes, jobsRes] = await Promise.all([
         api.get('/admin/dashboard'),
         api.get('/admin/users?limit=5'),
-        api.get('/admin/jobs?limit=5'),
-        api.get('/admin/users?groupBy=month&count=true&limit=6'),
-        api.get('/admin/jobs?groupBy=month&count=true&limit=6'),
-        api.get('/admin/applications?groupBy=month&count=true&limit=6')
+        api.get('/admin/jobs?limit=5')
       ]);
 
       setStats(statsRes.data.data.stats || {
@@ -58,11 +47,8 @@ export default function AdminDashboard() {
       });
       setRecentUsers(usersRes.data.data.users || []);
       setRecentJobs(jobsRes.data.data.jobs || []);
-      setUserGrowth(userGrowthRes.data.data || []);
-      setJobGrowth(jobGrowthRes.data.data || []);
-      setApplicationGrowth(applicationGrowthRes.data.data || []);
-    } catch (err) {
-      setError('Failed to load dashboard data. Please try again later.');
+    } catch (error) {
+      console.error(error);
       toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
@@ -98,52 +84,15 @@ export default function AdminDashboard() {
     );
   }
 
-  if (error) {
-    return (
-      <AdminLayout title="Overview">
-        <div className="text-center text-red-400 py-16">
-          <p className="text-lg font-semibold mb-2">{error}</p>
-        </div>
-      </AdminLayout>
-    );
-  }
-
   return (
     <AdminLayout title="Overview">
-      <div className="mb-8" role="region" aria-labelledby="dashboard-heading">
-        <h1 id="dashboard-heading" className="text-3xl font-bold text-white mb-2">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-white mb-2">
           Dashboard Overview
         </h1>
-        <p className="text-gray-400 mb-4">
+        <p className="text-gray-400">
           Welcome back! Here's what's happening on JobPulse.
         </p>
-        {/* Quick Actions */}
-        <nav aria-label="Admin quick actions" className="flex flex-wrap gap-2 sm:gap-4 mb-2" role="navigation">
-          <Link href="/admin/notifications" passHref legacyBehavior>
-            <a className="inline-flex items-center px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium shadow transition-colors focus:outline-none focus:ring-2 focus:ring-orange-300" aria-label="Send Notification" tabIndex={0}>
-              <span className="mr-2">Send Notification</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-            </a>
-          </Link>
-          <Link href="/admin/jobs/create" passHref legacyBehavior>
-            <a className="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium shadow transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300" aria-label="Create Job" tabIndex={0}>
-              <span className="mr-2">Create Job</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
-            </a>
-          </Link>
-          <Link href="/admin/applications" passHref legacyBehavior>
-            <a className="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium shadow transition-colors focus:outline-none focus:ring-2 focus:ring-green-300" aria-label="Review Applications" tabIndex={0}>
-              <span className="mr-2">Review Applications</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-6a2 2 0 012-2h2a2 2 0 012 2v6m-6 0h6" /></svg>
-            </a>
-          </Link>
-          <Link href="/admin/audit-logs" passHref legacyBehavior>
-            <a className="inline-flex items-center px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium shadow transition-colors focus:outline-none focus:ring-2 focus:ring-purple-300" aria-label="View Audit Logs" tabIndex={0}>
-              <span className="mr-2">View Audit Logs</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            </a>
-          </Link>
-        </nav>
       </div>
 
       {/* Stats Cards */}
@@ -170,36 +119,6 @@ export default function AdminDashboard() {
             </div>
           </motion.div>
         ))}
-      </div>
-
-      {/* Analytics Charts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 mb-8">
-        <div>
-          <h2 className="text-xl font-semibold text-white mb-2">User Registrations (Last 6 Months)</h2>
-          {userGrowth.length === 0 ? (
-            <div className="text-gray-400 text-center py-8">No user registration data available.</div>
-          ) : (
-            <AdminDashboardChart data={userGrowth} title="User Registrations" label="Users" />
-          )}
-        </div>
-        <div>
-          <h2 className="text-xl font-semibold text-white mb-2">Job Postings (Last 6 Months)</h2>
-          {jobGrowth.length === 0 ? (
-            <div className="text-gray-400 text-center py-8">No job posting data available.</div>
-          ) : (
-            <AdminDashboardChart data={jobGrowth} title="Job Postings" label="Jobs" />
-          )}
-        </div>
-      </div>
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-white mb-2">Applications Submitted (Last 6 Months)</h2>
-        <div className="max-w-full">
-          {applicationGrowth.length === 0 ? (
-            <div className="text-gray-400 text-center py-8">No application data available.</div>
-          ) : (
-            <AdminDashboardChart data={applicationGrowth} title="Applications Submitted" label="Applications" />
-          )}
-        </div>
       </div>
 
       {/* Recent Activity Grid */}

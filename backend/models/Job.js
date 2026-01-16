@@ -84,7 +84,7 @@ const jobSchema = new mongoose.Schema({
     trim: true,
     maxlength: [200, 'Job title cannot exceed 200 characters']
   },
-  company: { // Denormalized for quicker access, but actual company data is in Employer model
+  company: { 
     type: String,
     required: [true, 'Company name is required'],
     trim: true,
@@ -134,19 +134,19 @@ const jobSchema = new mongoose.Schema({
   },
   applicationDeadline: {
     type: Date,
-    default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // Default 30 days from creation
+    default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) 
   },
-  employer: { // Reference to the Employer who posted this job
+  employer: { 
     type: mongoose.Schema.ObjectId,
     ref: 'Employer',
     required: true
   },
-  isActive: { // For soft delete or deactivating a job posting
+  isActive: { 
     type: Boolean,
     default: true
   }
 }, {
-  timestamps: true // Adds createdAt and updatedAt
+  timestamps: true 
 });
 
 // Create text index for search functionality

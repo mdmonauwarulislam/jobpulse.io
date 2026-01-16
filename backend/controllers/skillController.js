@@ -11,23 +11,20 @@ const getSkills = asyncHandler(async (req, res) => {
 
   let query = {};
   if (search) {
-    // Case-insensitive search on name and category using text index
     query.$text = { $search: search };
   }
   if (category) {
-    query.category = new RegExp(category, 'i'); // Case-insensitive exact match for category
+    query.category = new RegExp(category, 'i');
   }
 
-  // Only show approved skills to general users/job seekers
-  // Admins might need to see unapproved skills, which can be handled by a separate admin route/middleware
-  if (req.userType !== 'admin') { // Assuming admin has req.userType === 'admin'
+  if (req.userType !== 'admin') {
     query.isApproved = true;
   }
 
   const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
   
   const skills = await Skill.find(query)
-    .sort({ name: 1 }) // Sort alphabetically by name
+    .sort({ name: 1 })
     .skip(skip)
     .limit(parseInt(limit, 10));
 
@@ -61,7 +58,6 @@ const getSkillById = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, error: 'Skill not found.' });
   }
 
-  // If not admin, only show if approved
   if (req.userType !== 'admin' && !skill.isApproved) {
     return res.status(404).json({ success: false, error: 'Skill not found or not approved.' });
   }
@@ -80,9 +76,7 @@ const getSkillById = asyncHandler(async (req, res) => {
 const addSkill = asyncHandler(async (req, res) => {
   const { name, category } = req.body;
 
-  // Set isApproved based on user role or default policy
-  // For production, you might want to require admin approval for all new skills added by non-admins
-  const isApproved = req.userType === 'admin' ? true : false; // Admins can auto-approve
+  const isApproved = req.userType === 'admin' ? true : false;
 
   const skill = await Skill.create({ name, category, isApproved });
 
@@ -107,8 +101,6 @@ const updateSkill = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, error: 'Skill not found.' });
   }
 
-  // Only allow admin to update
-  // This check is redundant if `requireAdmin` middleware is used on the route, but good for safety
   if (req.userType !== 'admin') {
     return res.status(403).json({ success: false, error: 'Access denied. Admin privileges required to update skills.' });
   }
@@ -117,7 +109,7 @@ const updateSkill = asyncHandler(async (req, res) => {
   if (category !== undefined) skill.category = category;
   if (isApproved !== undefined) skill.isApproved = isApproved;
 
-  skill = await skill.save({ validateBeforeSave: true }); // Run schema validation
+  skill = await skill.save({ validateBeforeSave: true });
 
   res.status(200).json({
     success: true,
@@ -138,12 +130,11 @@ const deleteSkill = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, error: 'Skill not found.' });
   }
 
-  // Only allow admin to delete
   if (req.userType !== 'admin') {
     return res.status(403).json({ success: false, error: 'Access denied. Admin privileges required to delete skills.' });
   }
 
-  await skill.deleteOne(); // Use deleteOne() or deleteMany() instead of remove()
+  await skill.deleteOne();
 
   res.status(200).json({
     success: true,

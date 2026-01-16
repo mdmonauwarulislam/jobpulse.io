@@ -68,11 +68,11 @@ const employerSchema = new mongoose.Schema({
     type: Date,
     select: false
   },
-  isActive: { // This field was not in my placeholder, good to have for admin control
+  isActive: { 
     type: Boolean,
     default: true
   },
-  isProfileComplete: { // This field was not in my placeholder, good to have for tracking
+  isProfileComplete: { 
     type: Boolean,
     default: false
   }
@@ -83,7 +83,7 @@ const employerSchema = new mongoose.Schema({
 // Hash password before saving
 employerSchema.pre('save', async function(next) {
   if (!this.isModified('password')) {
-    return next(); // Corrected to use 'return'
+    return next(); 
   }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
@@ -107,7 +107,7 @@ employerSchema.methods.generatePasswordResetToken = function() {
     .createHash('sha256')
     .update(resetToken)
     .digest('hex');
-  this.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
+  this.resetPasswordExpire = Date.now() + 10 * 60 * 1000; 
   return resetToken;
 };
 
@@ -129,7 +129,7 @@ employerSchema.methods.clearPasswordResetToken = function() {
 };
 
 employerSchema.virtual('profileCompletion').get(function() {
-  let total = 5; // companyDescription, companyWebsite, companyLogo, phone, address
+  let total = 5; 
   let filled = 0;
   if (this.companyDescription && this.companyDescription.trim().length > 0) filled++;
   if (this.companyWebsite && this.companyWebsite.trim().length > 0) filled++;

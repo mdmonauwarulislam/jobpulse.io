@@ -32,25 +32,24 @@ const protect = async (req, res, next) => {
     // 4. Fetch user/employer based on the role in the token
     let entity;
     if (decoded.role === 'employer') {
-      entity = await Employer.findById(decoded.id).select('+password'); // Select password for comparison if needed in other flows
+      entity = await Employer.findById(decoded.id).select('+password'); 
       if (!entity) {
         return res.status(401).json({ success: false, error: 'Employer not found.' });
       }
       req.user = entity;
       req.userType = 'employer';
     } else { // Assuming 'user' role for job seekers and admins
-      entity = await User.findById(decoded.id).select('+password'); // Select password for comparison if needed in other flows
+      entity = await User.findById(decoded.id).select('+password'); 
       if (!entity) {
         return res.status(401).json({ success: false, error: 'User (job seeker/admin) not found.' });
       }
       req.user = entity;
-      req.userType = 'user'; // Differentiate between 'user' type and 'employer' type
+      req.userType = 'user'; 
     }
     
-    next(); // Proceed to the next middleware or route handler
+    next(); 
 
   } catch (error) {
-    // Log detailed error for debugging, but send generic message to client
     console.error('❌ Authentication failed:', error.message); 
     return res.status(401).json({ success: false, error: 'Invalid or expired token. Please log in again.' });
   }
@@ -75,7 +74,6 @@ const requireVerification = (req, res, next) => {
  * Assumes `protect` middleware has already run and `req.user` is available.
  */
 const requireAdmin = (req, res, next) => {
-  // Ensure the user type is 'user' and their role is 'admin'
   if (req.userType !== 'user' || req.user.role !== 'admin') {
     return res.status(403).json({ 
       success: false,
@@ -96,17 +94,12 @@ const requireEmployer = (req, res, next) => {
       error: 'Access denied. Employer account required.' 
     });
   }
-  // Employers also need to be verified to access protected employer routes
   if (!req.user.isVerified) {
     return res.status(403).json({ 
       success: false,
       error: 'Employer account not verified. Please verify your email.' 
     });
   }
-  // Optional: Add check for isAdminApproved if you want to gate employer access after initial verification
-  // if (!req.user.isAdminApproved) {
-  //   return res.status(403).json({ success: false, error: 'Employer account pending admin approval.' });
-  // }
   next();
 };
 
@@ -115,14 +108,12 @@ const requireEmployer = (req, res, next) => {
  * Assumes `protect` middleware has already run and `req.user` and `req.userType` are available.
  */
 const requireJobSeeker = (req, res, next) => {
-  // Check if userType is 'user' AND their role is NOT 'admin'
   if (req.userType !== 'user' || req.user.role === 'admin') {
     return res.status(403).json({ 
       success: false,
       error: 'Access denied. Job seeker privileges required.' 
     });
   }
-  // Job seekers also need to be verified to access protected job seeker routes
   if (!req.user.isVerified) {
     return res.status(403).json({ 
       success: false,
@@ -155,19 +146,18 @@ const optionalAuth = async (req, res, next) => {
       let entity;
       if (decoded.role === 'employer') {
         entity = await Employer.findById(decoded.id);
-        if (entity && entity.isVerified) { // Only attach if verified
+        if (entity && entity.isVerified) { 
           req.user = entity;
           req.userType = 'employer';
         }
       } else {
         entity = await User.findById(decoded.id);
-        if (entity && entity.isVerified) { // Only attach if verified
+        if (entity && entity.isVerified) { 
           req.user = entity;
           req.userType = 'user';
         }
       }
     } catch (error) {
-      // Log the error but continue without setting req.user
       console.warn('Optional authentication: Invalid or expired token, continuing as unauthenticated.');
     }
   }
@@ -175,7 +165,6 @@ const optionalAuth = async (req, res, next) => {
 };
 
 
-// Export all middleware functions
 module.exports = {
   protect,
   requireVerification,

@@ -2,8 +2,11 @@ const User = require('../models/User');
 const Employer = require('../models/Employer');
 const Job = require('../models/Job');
 const Application = require('../models/Application');
-const asyncHandler = require('../utils/asyncHandler'); // Import the async handler
-const { deleteFile, getFileUrl } = require('../middleware/uploadMiddleware'); // For logo deletion
+const Notification = require('../models/Notification');
+const asyncHandler = require('../utils/asyncHandler'); 
+const { logAdminAction } = require('../utils/auditLogger');
+const AuditLog = require('../models/AuditLog'); 
+const { deleteFile, getFileUrl } = require('../middleware/uploadMiddleware'); 
 
 // --- User Management (Admin Only) ---
 
@@ -16,7 +19,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
   const search = req.query.search;
-  const role = req.query.role; // Filter by 'user' or 'admin'
+  const role = req.query.role; 
 
   // Basic validation for pagination
   if (page < 1 || limit < 1 || limit > 100) {
@@ -45,7 +48,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
-    .populate('skills'); // Populate skills for user details
+    .populate('skills');  
 
   const total = await User.countDocuments(filter);
   const totalPages = Math.ceil(total / limit);
@@ -65,6 +68,44 @@ const getAllUsers = asyncHandler(async (req, res) => {
   });
 });
 
+// --- Notification Management (Admin Only) ---
+/**
+ * @desc Get all notifications (Admin)
+ * @route GET /api/admin/notifications
+ * @access Private (Admin Only)
+ */
+const getAllNotifications = asyncHandler(async (req, res) => {
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 10;
+  const search = req.query.search;
+  const filter = {};
+  if (search) {
+    filter.$or = [
+      { title: { $regex: search, $options: 'i' } },
+      { message: { $regex: search, $options: 'i' } }
+    ];
+  }
+  const skip = (page - 1) * limit;
+  const notifications = await Notification.find(filter)
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+  const total = await Notification.countDocuments(filter);
+  const totalPages = Math.ceil(total / limit);
+  res.json({
+    success: true,
+    data: {
+      notifications,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalNotifications: total,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      }
+    }
+  });
+});
 /**
  * @desc Get single user by ID
  * @route GET /api/admin/users/:userId
@@ -91,7 +132,7 @@ const getUserById = asyncHandler(async (req, res) => {
  */
 const updateUser = asyncHandler(async (req, res) => {
   const { userId } = req.params;
-  const updateData = req.body; // Expects fields like name, email, role, isVerified, etc.
+  const updateData = req.body; 
 
   // Prevent admin from changing their own role to non-admin or deleting their own account via this endpoint.
   // This is a safety measure. The `deleteUser` function also needs specific checks if applicable.
@@ -102,7 +143,7 @@ const updateUser = asyncHandler(async (req, res) => {
   const user = await User.findByIdAndUpdate(
     userId,
     updateData,
-    { new: true, runValidators: true } // Return updated doc, run schema validators
+    { new: true, runValidators: true } 
   ).select('-password -verificationToken -resetPasswordToken -resetPasswordExpire')
    .populate('skills');
 
@@ -112,7 +153,16 @@ const updateUser = asyncHandler(async (req, res) => {
 
   // Recalculate isProfileComplete based on the virtual if profile fields were updated
   user.isProfileComplete = user.profileCompletion === 100;
-  await user.save({ validateBeforeSave: false }); // Save again without full validation just for profileComplete
+  await user.save({ validateBeforeSave: false }); 
+
+  // Audit log
+  await logAdminAction({
+    action: 'updateUser',
+    performedBy: req.user._id,
+    targetType: 'User',
+    targetId: userId,
+    details: updateData
+  });
 
   res.json({ success: true, message: 'User updated successfully', data: { user } });
 });
@@ -151,8 +201,17 @@ const deleteUser = asyncHandler(async (req, res) => {
   }
 
   // Delete user document
-  await user.deleteOne(); // Use deleteOne()
+  await user.deleteOne(); 
   console.log(`✅ User ${userId} deleted by admin.`);
+
+  // Audit log
+  await logAdminAction({
+    action: 'deleteUser',
+    performedBy: req.user._id,
+    targetType: 'User',
+    targetId: userId,
+    details: { email: user.email, name: user.name }
+  });
 
   res.json({ success: true, message: 'User deleted successfully' });
 });
@@ -176,13 +235,14 @@ const getAllEmployers = asyncHandler(async (req, res) => {
   const filter = {};
   if (search) {
     filter.$or = [
-      { name: { $regex: search, $options: 'i' } }, // Contact person name
+      { name: { $regex: search, $options: 'i' } }, 
       { email: { $regex: search, $options: 'i' } },
-      { company: { $regex: search, $options: 'i' } } // Company name
+      { company: { $regex: search, $options: 'i' } } 
     ];
   }
 
   const skip = (page - 1) * limit;
+
 
   const employers = await Employer.find(filter)
     .select('-password -verificationToken -resetPasswordToken -resetPasswordExpire')
@@ -207,6 +267,7 @@ const getAllEmployers = asyncHandler(async (req, res) => {
     }
   });
 });
+
 
 /**
  * @desc Get single employer by ID
@@ -233,7 +294,7 @@ const getEmployerById = asyncHandler(async (req, res) => {
  */
 const updateEmployer = asyncHandler(async (req, res) => {
   const { employerId } = req.params;
-  const updateData = req.body; // Can include any field from employer schema
+  const updateData = req.body; 
 
   const employer = await Employer.findByIdAndUpdate(
     employerId,
@@ -248,6 +309,15 @@ const updateEmployer = asyncHandler(async (req, res) => {
   // Recalculate isProfileComplete based on the virtual if profile fields were updated
   employer.isProfileComplete = employer.profileCompletion === 100;
   await employer.save({ validateBeforeSave: false });
+
+  // Audit log
+  await logAdminAction({
+    action: 'updateEmployer',
+    performedBy: req.user._id,
+    targetType: 'Employer',
+    targetId: employerId,
+    details: updateData
+  });
 
   res.json({ success: true, message: 'Employer updated successfully', data: { employer } });
 });
@@ -266,7 +336,7 @@ const deleteEmployer = asyncHandler(async (req, res) => {
   }
 
   // Delete employer's jobs
-  await Job.deleteMany({ employer: employerId }); // Correctly references 'employer' field in Job model
+  await Job.deleteMany({ employer: employerId }); 
   console.log(`✅ All jobs posted by employer ${employerId} deleted by admin.`);
 
   // Delete company logo if exists
@@ -283,6 +353,15 @@ const deleteEmployer = asyncHandler(async (req, res) => {
   // Delete employer document
   await employer.deleteOne();
   console.log(`✅ Employer ${employerId} deleted by admin.`);
+
+  // Audit log
+  await logAdminAction({
+    action: 'deleteEmployer',
+    performedBy: req.user._id,
+    targetType: 'Employer',
+    targetId: employerId,
+    details: { email: employer.email, company: employer.company }
+  });
 
   res.json({ success: true, message: 'Employer deleted successfully' });
 });
@@ -308,7 +387,7 @@ const uploadEmployerLogo = asyncHandler(async (req, res) => {
   // Delete old logo if exists
   if (employer.companyLogo) {
     const oldFilename = employer.companyLogo.split('/').pop();
-    if (oldFilename !== req.file.filename) { // Prevent deleting if it's the same file
+    if (oldFilename !== req.file.filename) { 
       try {
         await deleteFile(oldFilename);
         console.log(`✅ Old company logo ${oldFilename} deleted for employer ${employerId}.`);
@@ -319,7 +398,7 @@ const uploadEmployerLogo = asyncHandler(async (req, res) => {
   }
 
   employer.companyLogo = getFileUrl(req.file.filename);
-  employer.isProfileComplete = employer.profileCompletion === 100; // Update profile completeness
+  employer.isProfileComplete = employer.profileCompletion === 100; 
   await employer.save({ validateBeforeSave: true });
 
   res.json({
@@ -344,8 +423,8 @@ const getAllJobs = asyncHandler(async (req, res) => {
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
   const search = req.query.search;
-  const status = req.query.status; // 'active' or 'inactive'
-  const includeExpired = req.query.includeExpired === 'true'; // Admin can view expired jobs
+  const status = req.query.status; 
+  const includeExpired = req.query.includeExpired === 'true'; 
 
   if (page < 1 || limit < 1 || limit > 100) {
     return res.status(400).json({ success: false, error: 'Invalid page or limit parameter.' });
@@ -353,7 +432,7 @@ const getAllJobs = asyncHandler(async (req, res) => {
 
   const filter = {};
   if (search) {
-    filter.$or = [ // Use $or for broader search
+    filter.$or = [ 
       { title: { $regex: search, $options: 'i' } },
       { company: { $regex: search, $options: 'i' } },
       { location: { $regex: search, $options: 'i' } },
@@ -366,14 +445,14 @@ const getAllJobs = asyncHandler(async (req, res) => {
 
   // For admin, we might want to see expired jobs explicitly if requested
   if (!includeExpired) {
-    filter.applicationDeadline = { $gte: new Date() }; // Only include non-expired jobs by default for admin
+    filter.applicationDeadline = { $gte: new Date() }; 
   }
 
 
   const skip = (page - 1) * limit;
 
   const jobs = await Job.find(filter)
-    .populate('employer', 'companyName companyLogo email') // Populate employer details from 'employer' field
+    .populate('employer', 'companyName companyLogo email') 
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
@@ -406,7 +485,7 @@ const getAllJobs = asyncHandler(async (req, res) => {
 const getAllApplications = asyncHandler(async (req, res) => {
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
-  const status = req.query.status || 'all'; // Filter by application status
+  const status = req.query.status || 'all'; 
 
   if (page < 1 || limit < 1 || limit > 100) {
     return res.status(400).json({ success: false, error: 'Invalid page or limit parameter.' });
@@ -424,9 +503,9 @@ const getAllApplications = asyncHandler(async (req, res) => {
   const skip = (page - 1) * limit;
   
   const applications = await Application.find(filter)
-    .populate('job', 'title company location') // Populate relevant job info
-    .populate('applicant', 'name email phone') // Populate relevant applicant info
-    .populate('employer', 'companyName email') // Populate relevant employer info
+    .populate('job', 'title company location') 
+    .populate('applicant', 'name email phone') 
+    .populate('employer', 'companyName email') 
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
@@ -474,15 +553,15 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     .sort({ createdAt: -1 })
     .limit(5);
 
-  const recentJobs = await Job.find({ isActive: true, applicationDeadline: { $gte: new Date() } }) // Only active, non-expired
-    .populate('employer', 'companyName') // Populate company name for clarity
+  const recentJobs = await Job.find({ isActive: true, applicationDeadline: { $gte: new Date() } }) 
+    .populate('employer', 'companyName') 
     .select('title company createdAt')
     .sort({ createdAt: -1 })
     .limit(5);
 
   const recentApplications = await Application.find()
-    .populate('job', 'title') // Only need job title for recent applications
-    .populate('applicant', 'name') // Only need applicant name
+    .populate('job', 'title') 
+    .populate('applicant', 'name') 
     .select('status createdAt')
     .sort({ createdAt: -1 })
     .limit(5);
@@ -527,13 +606,91 @@ const getDashboardStats = asyncHandler(async (req, res) => {
       },
       statusCounts,
       recentUsers,
-      recentEmployers, // Added recent employers
+      recentEmployers, 
       recentJobs,
       recentApplications
     }
   });
 });
 
+
+
+/**
+ * @desc Get audit logs with pagination and filtering (Admin)
+ * @route GET /api/admin/audit-logs
+ * @access Private (Admin Only)
+ */
+const getAuditLogs = asyncHandler(async (req, res) => {
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 10;
+  const action = req.query.action;
+  const targetType = req.query.targetType;
+
+  if (page < 1 || limit < 1 || limit > 100) {
+    return res.status(400).json({ success: false, error: 'Invalid page or limit parameter.' });
+  }
+
+  const filter = {};
+  if (action) filter.action = action;
+  if (targetType) filter.targetType = targetType;
+
+  const skip = (page - 1) * limit;
+
+  const logs = await AuditLog.find(filter)
+    .populate('performedBy', 'name email role') 
+    .sort({ timestamp: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  const total = await AuditLog.countDocuments(filter);
+  const totalPages = Math.ceil(total / limit);
+
+  res.json({
+    success: true,
+    data: {
+      logs,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalLogs: total,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      }
+    }
+  });
+});
+
+
+/**
+ * @desc Update application status (Admin)
+ * @route PATCH /api/admin/applications/:applicationId/status
+ * @access Private (Admin Only)
+ */
+const updateApplicationStatus = asyncHandler(async (req, res) => {
+  const { applicationId } = req.params;
+  const { status } = req.body;
+  const allowedStatuses = ['pending', 'reviewed', 'shortlisted', 'rejected', 'hired'];
+  if (!allowedStatuses.includes(status)) {
+    return res.status(400).json({ success: false, error: 'Invalid status value.' });
+  }
+  const application = await Application.findById(applicationId);
+  if (!application) {
+    return res.status(404).json({ success: false, error: 'Application not found.' });
+  }
+  application.status = status;
+  application.reviewedAt = new Date();
+  application.reviewedBy = req.user._id;
+  application.reviewedByModel = 'User';
+  await application.save();
+  await logAdminAction({
+    action: 'updateApplicationStatus',
+    performedBy: req.user._id,
+    targetType: 'Application',
+    targetId: applicationId,
+    details: { status }
+  });
+  res.json({ success: true, message: 'Application status updated', data: { application } });
+});
 
 module.exports = {
   getAllUsers,
@@ -544,8 +701,11 @@ module.exports = {
   getEmployerById,
   updateEmployer,
   deleteEmployer,
-  uploadEmployerLogo, // Keep this for admin-initiated logo uploads
-  getAllJobs, // Admin version to see all jobs (active/inactive/expired if requested)
+  uploadEmployerLogo, 
+  getAllJobs, 
   getAllApplications,
-  getDashboardStats
+  getDashboardStats,
+  updateApplicationStatus,
+  getAuditLogs,
+  getAllNotifications
 };

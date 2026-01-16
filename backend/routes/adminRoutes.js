@@ -1,5 +1,5 @@
 const express = require('express');
-const { body, param, query } = require('express-validator'); // Import param for ID validation
+const { body, param, query } = require('express-validator'); 
 const router = express.Router();
 
 const {
@@ -11,21 +11,21 @@ const {
   getEmployerById,
   updateEmployer,
   deleteEmployer,
-  uploadEmployerLogo, // For admin to upload a logo for an employer
-  getAllJobs, // Admin's view of all jobs
+  uploadEmployerLogo, 
+  getAllJobs, 
   getAllApplications,
   getDashboardStats,
+  getAuditLogs,
+  getAllNotifications
 } = require('../controllers/adminController');
 
 const {
-  protect, // Use the new consolidated protect middleware
+  protect, 
   requireAdmin,
-  // Removed requireVerification here as admin already has it built into their login flow
 } = require('../middleware/authMiddleware');
 
-const { uploadCompanyLogo: uploadLogoMiddleware } = require('../middleware/uploadMiddleware'); // Assuming this exists for file uploads
+const { uploadLogo: uploadLogoMiddleware } = require('../middleware/uploadMiddleware');
 
-// Validation middleware for admin actions
 const validateUserUpdate = [
   param('userId').isMongoId().withMessage('Invalid User ID format.'),
   body('name').optional().trim().isLength({ min: 2, max: 100 }).withMessage('Name must be between 2 and 100 characters'),
@@ -33,7 +33,6 @@ const validateUserUpdate = [
   body('role').optional().isIn(['user', 'admin']).withMessage('Invalid role provided.').trim(),
   body('isVerified').optional().isBoolean().withMessage('isVerified must be a boolean'),
   body('isProfileComplete').optional().isBoolean().withMessage('isProfileComplete must be a boolean'),
-  // Additional fields for user profile update (like education, experience, skills)
   body('phone').optional().trim().isLength({ max: 20 }).withMessage('Phone number cannot exceed 20 characters'),
   body('address').optional().trim().isLength({ max: 200 }).withMessage('Address cannot exceed 200 characters'),
   body('summary').optional().trim().isLength({ max: 1000 }).withMessage('Summary cannot exceed 1000 characters'),
@@ -68,31 +67,34 @@ const validateEmployerUpdate = [
 ];
 
 
-// All routes in this router require admin authentication
-router.use(protect, requireAdmin); // Removed requireVerification as admin role implies verification for login
+router.use(protect, requireAdmin); 
 
-// Dashboard
-router.get('/dashboard', getDashboardStats); // Renamed from '/dashboard'
+router.get('/dashboard', getDashboardStats); 
 
-// User management
 router.get('/users', getAllUsers);
 router.get('/users/:userId', getUserById);
 router.put('/users/:userId', validateUserUpdate, updateUser);
 router.delete('/users/:userId', deleteUser);
 
-// Employer management
 router.get('/employers', getAllEmployers);
 router.get('/employers/:employerId', getEmployerById);
 router.put('/employers/:employerId', validateEmployerUpdate, updateEmployer);
 router.delete('/employers/:employerId', deleteEmployer);
-// Admin can upload logo for a specific employer (by ID)
 router.post('/employers/:employerId/upload-logo', uploadLogoMiddleware, uploadEmployerLogo);
 
 
-// Job management
-router.get('/jobs', getAllJobs); // Admin can view all jobs, including inactive/expired ones
+router.get('/jobs', getAllJobs); 
 
-// Application management
 router.get('/applications', getAllApplications);
+router.patch('/applications/:applicationId/status',
+  param('applicationId').isMongoId().withMessage('Invalid Application ID format.'),
+  body('status').isIn(['pending', 'reviewed', 'shortlisted', 'rejected', 'hired']).withMessage('Invalid status value.'),
+  requireAdmin,
+  require('../controllers/adminController').updateApplicationStatus
+);
+
+router.get('/audit-logs', getAuditLogs);
+
+router.get('/notifications', getAllNotifications);
 
 module.exports = router;

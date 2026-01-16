@@ -10,13 +10,15 @@ const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 
 // Import routes
-const authRoutes = require('./routes/authRoutes'); // Will be created next
+const authRoutes = require('./routes/authRoutes');
 const jobRoutes = require('./routes/jobRoutes');
-const applicationRoutes = require('./routes/applicationRoutes'); // Assuming you have this
+const applicationRoutes = require('./routes/applicationRoutes');
 const userRoutes = require('./routes/userRoutes');
-const adminRoutes = require('./routes/adminRoutes'); // Assuming you have this
-const employerRoutes = require('./routes/employerRoutes'); // NEW: Import employer routes
-const skillRoutes = require('./routes/skillRoutes');     // NEW: Import skill routes
+const adminRoutes = require('./routes/adminRoutes');
+const employerRoutes = require('./routes/employerRoutes');
+const skillRoutes = require('./routes/skillRoutes');
+const chatRoutes = require('./routes/chatRoutes');           // Chat/messaging routes
+const notificationRoutes = require('./routes/notificationRoutes'); // Notification routes
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -65,14 +67,15 @@ app.get('/api/health', (req, res) => {
 });
 
 // API Routes - Mount all your routes here
-// Order generally doesn't matter unless there are overlapping paths with stricter specificity
-app.use('/api/auth', authRoutes); // Auth routes (login, register, verify, etc.)
+app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/employers', employerRoutes); // NEW: Employer-specific routes
-app.use('/api/skills', skillRoutes);     // NEW: Skill management routes
+app.use('/api/employers', employerRoutes);
+app.use('/api/skills', skillRoutes);
+app.use('/api/chat', chatRoutes);               // Chat/messaging routes
+app.use('/api/notifications', notificationRoutes); // Notification routes
 
 // 404 handler - This catches any requests that didn't match the above routes
 app.use('*', (req, res) => {

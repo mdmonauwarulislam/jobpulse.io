@@ -12,7 +12,7 @@ const {
 } = require('../controllers/applicationController');
 
 const {
-  getUserFromToken,
+  protect,
   requireVerification,
   requireJobSeeker,
   requireEmployer,
@@ -31,13 +31,13 @@ const validateStatusUpdate = [
 ];
 
 // Job seeker routes
-router.post('/', getUserFromToken, requireVerification, requireJobSeeker, validateApplication, submitApplication);
-router.get('/user', getUserFromToken, requireVerification, requireJobSeeker, getUserApplications);
-router.delete('/:applicationId', getUserFromToken, requireVerification, requireJobSeeker, withdrawApplication);
+router.post('/', protect, requireVerification, requireJobSeeker, validateApplication, submitApplication);
+router.get('/user', protect, requireVerification, requireJobSeeker, getUserApplications);
+router.delete('/:applicationId', protect, requireVerification, requireJobSeeker, withdrawApplication);
 
 // Employer/Admin routes
-router.get('/job/:jobId', getUserFromToken, requireVerification, getApplicationsForJob);
-router.put('/:applicationId/status', getUserFromToken, requireVerification, validateStatusUpdate, updateApplicationStatus);
-router.get('/:applicationId', getUserFromToken, requireVerification, getApplicationById);
+router.get('/job/:jobId', protect, requireVerification, getApplicationsForJob);
+router.put('/:applicationId/status', protect, requireVerification, validateStatusUpdate, updateApplicationStatus);
+router.get('/:applicationId', protect, requireVerification, getApplicationById);
 
 module.exports = router; 

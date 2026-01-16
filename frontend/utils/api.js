@@ -31,10 +31,16 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    // Handle authentication errors
-    if (error.response?.status === 401) {
-      // Clear token and redirect to login
+    // Handle authentication errors - but NOT for login/register endpoints
+    const isAuthEndpoint = error.config?.url?.includes('/auth/login') || 
+                           error.config?.url?.includes('/auth/register') ||
+                           error.config?.url?.includes('/auth/forgot-password') ||
+                           error.config?.url?.includes('/auth/reset-password');
+    
+    if (error.response?.status === 401 && !isAuthEndpoint) {
+      // Clear token and redirect to login only for protected routes
       Cookies.remove('token');
+      Cookies.remove('userType');
       if (typeof window !== 'undefined') {
         window.location.href = '/auth/login';
       }

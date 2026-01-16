@@ -30,7 +30,7 @@ const skillSchema = new mongoose.Schema({
   name: {
     type: String,
     required: [true, 'Skill name is required'],
-    unique: true, // Skills should be unique to avoid duplicates
+    unique: true, 
     trim: true,
     minlength: [2, 'Skill name must be at least 2 characters'],
     maxlength: [100, 'Skill name cannot exceed 100 characters']
@@ -42,11 +42,11 @@ const skillSchema = new mongoose.Schema({
   },
   isApproved: {
     type: Boolean,
-    default: false, // New skills might need admin approval before being broadly searchable
-    select: false // Don't expose this field by default to non-admin queries
+    default: false, 
+    select: false 
   },
 }, {
-  timestamps: true // Adds createdAt and updatedAt fields
+  timestamps: true 
 });
 
 // Create a text index on the name and category for efficient searching

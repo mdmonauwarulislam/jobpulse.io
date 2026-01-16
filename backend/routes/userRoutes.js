@@ -13,12 +13,10 @@ const {
   deleteUserAccount
 } = require('../controllers/userController');
 
-const { completeProfile } = require('../controllers/authController');
 const {
-  getUserFromToken,
+  protect,
   requireVerification,
-  requireJobSeeker,
-  protect
+  requireJobSeeker
 } = require('../middleware/authMiddleware');
 
 const { uploadResume: uploadResumeMiddleware } = require('../middleware/uploadMiddleware');
@@ -41,14 +39,14 @@ const validateAccountDeletion = [
 ];
 
 // Protected routes (require authentication)
-router.get('/profile', getUserFromToken, requireVerification, getUserProfile);
-router.put('/profile', getUserFromToken, requireVerification, validateProfileUpdate, updateUserProfile);
-router.post('/upload-resume', getUserFromToken, requireVerification, requireJobSeeker, uploadResumeMiddleware, uploadResume);
-router.delete('/resume', getUserFromToken, requireVerification, requireJobSeeker, deleteResume);
-router.get('/applications', getUserFromToken, requireVerification, requireJobSeeker, getUserApplications);
-router.get('/stats', getUserFromToken, requireVerification, requireJobSeeker, getUserStats);
-router.put('/change-password', getUserFromToken, requireVerification, validatePasswordChange, changePassword);
-router.delete('/account', getUserFromToken, requireVerification, validateAccountDeletion, deleteUserAccount);
-router.post('/complete-profile', protect, completeProfile);
+router.get('/profile', protect, requireVerification, getUserProfile);
+router.put('/profile', protect, requireVerification, validateProfileUpdate, updateUserProfile);
+router.post('/complete-profile', protect, validateProfileUpdate, updateUserProfile); // Use updateUserProfile for completion
+router.post('/upload-resume', protect, requireVerification, requireJobSeeker, uploadResumeMiddleware, uploadResume);
+router.delete('/resume', protect, requireVerification, requireJobSeeker, deleteResume);
+router.get('/applications', protect, requireVerification, requireJobSeeker, getUserApplications);
+router.get('/stats', protect, requireVerification, requireJobSeeker, getUserStats);
+router.put('/change-password', protect, requireVerification, validatePasswordChange, changePassword);
+router.delete('/account', protect, requireVerification, validateAccountDeletion, deleteUserAccount);
 
 module.exports = router;

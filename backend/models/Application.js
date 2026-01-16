@@ -51,7 +51,7 @@ const applicationSchema = new mongoose.Schema({
   },
   reviewedByModel: {
     type: String,
-    enum: ['Employer', 'User'] // User with admin role
+    enum: ['Employer', 'User'] 
   }
 }, {
   timestamps: true

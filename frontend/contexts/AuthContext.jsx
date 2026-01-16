@@ -54,7 +54,7 @@ export function AuthProvider({ children }) {
 
   const fetchUser = async (savedUserType) => {
     try {
-      const response = await api.get('/auth/profile');
+      const response = await api.get('/auth/me');
       // Support both user and employer objects from backend
       const userObj = response.data.data.user || response.data.data.employer;
       setUser({ ...userObj, profileCompletion: response.data.data.profileCompletion });
