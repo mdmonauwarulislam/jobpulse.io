@@ -1402,7 +1402,10 @@ export default function Home() {
                   <div className="absolute -inset-1 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-3xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
 
                   <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-3xl border border-white/20 shadow-xl group-hover:shadow-2xl transition-all duration-500">
-                    <JobCard job={job} />
+                    <JobCard 
+                      job={job} 
+                      onApply={() => router.push(`/jobs/${job._id}`)}
+                    />
                   </div>
                 </motion.div>
               ))}

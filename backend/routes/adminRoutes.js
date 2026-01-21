@@ -7,11 +7,11 @@ const {
   getUserById,
   updateUser,
   deleteUser,
-  getAllEmployers,
-  getEmployerById,
-  updateEmployer,
-  deleteEmployer,
-  uploadEmployerLogo, 
+  getAllEmployerProfiles,
+  getEmployerProfileById,
+  updateEmployerProfile,
+  deleteEmployerProfile,
+  uploadEmployerProfileLogo, 
   getAllJobs, 
   getAllApplications,
   getDashboardStats,
@@ -76,11 +76,11 @@ router.get('/users/:userId', getUserById);
 router.put('/users/:userId', validateUserUpdate, updateUser);
 router.delete('/users/:userId', deleteUser);
 
-router.get('/employers', getAllEmployers);
-router.get('/employers/:employerId', getEmployerById);
-router.put('/employers/:employerId', validateEmployerUpdate, updateEmployer);
-router.delete('/employers/:employerId', deleteEmployer);
-router.post('/employers/:employerId/upload-logo', uploadLogoMiddleware, uploadEmployerLogo);
+router.get('/employers', getAllEmployerProfiles);
+router.get('/employers/:employerId', getEmployerProfileById);
+router.put('/employers/:employerId', validateEmployerUpdate, updateEmployerProfile);
+router.delete('/employers/:employerId', deleteEmployerProfile);
+router.post('/employers/:employerId/upload-logo', uploadLogoMiddleware, uploadEmployerProfileLogo);
 
 
 router.get('/jobs', getAllJobs); 

@@ -1,20 +1,34 @@
 const User = require('../models/User');
+const CandidateProfile = require('../models/CandidateProfile');
 const Application = require('../models/Application');
 const asyncHandler = require('../utils/asyncHandler');
 const { deleteFile, getFileUrl } = require('../middleware/uploadMiddleware');
 
 const getUserProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id)
-    .select('-password -verificationToken -resetPasswordToken -resetPasswordExpire')
-    .populate('skills');
+  // req.profile is attached by protect middleware
+  const candidateProfile = req.profile;
 
-  if (!user) {
-    return res.status(404).json({ success: false, error: 'User profile not found.' });
+  if (!candidateProfile) {
+     // If profile missing for some reason, maybe return basic user info or error
+     // For now, let's error as it should exist for a valid candidate
+     return res.status(404).json({ success: false, error: 'Candidate profile not found.' });
   }
+
+  // Merge User data
+  const userData = {
+    _id: req.user._id,
+    userId: req.user.userId,
+    name: req.user.name,
+    email: req.user.email,
+    isVerified: req.user.isVerified
+  };
 
   res.json({
     success: true,
-    data: { user, profileCompletion: user.profileCompletion }
+    data: { 
+        user: { ...userData, ...candidateProfile.toObject() }, 
+        profileCompletion: candidateProfile.profileCompletion 
+    }
   });
 });
 
@@ -29,44 +43,110 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     skills 
   } = req.body;
 
+  const candidateProfile = await CandidateProfile.findOne({ user: req.user._id });
   const user = await User.findById(req.user._id);
 
-  if (!user) {
-    return res.status(404).json({ success: false, error: 'User not found.' });
+  if (!candidateProfile || !user) {
+    return res.status(404).json({ success: false, error: 'User or Profile not found.' });
   }
 
+  // Update User fields
   if (name !== undefined) user.name = name;
-  if (phone !== undefined) user.phone = phone;
-  if (address !== undefined) user.address = address;
-  if (summary !== undefined) user.summary = summary;
+  await user.save({ validateBeforeSave: false });
+
+  // Update Profile fields
+  // Update Profile fields
+  if (phone !== undefined) candidateProfile.phone = phone;
+  if (summary !== undefined) candidateProfile.summary = summary;
+  
+  if (req.body.location) {
+     candidateProfile.location = { ...candidateProfile.location, ...req.body.location };
+  }
+  // If address was sent, try to map it to location city (fallback) or ignore? 
+  // User asked to replace address with location.
+  if (req.body.profilePic !== undefined) candidateProfile.profilePic = req.body.profilePic; // Allow updating URL directly if needed
 
   try {
     if (education !== undefined) {
-      user.education = Array.isArray(education) ? education : JSON.parse(education);
+      candidateProfile.education = Array.isArray(education) ? education : JSON.parse(education);
     }
     if (experience !== undefined) {
-      user.experience = Array.isArray(experience) ? experience : JSON.parse(experience);
+      candidateProfile.experience = Array.isArray(experience) ? experience : JSON.parse(experience);
     }
     if (skills !== undefined) {
-      user.skills = Array.isArray(skills) ? skills : JSON.parse(skills);
+      candidateProfile.skills = Array.isArray(skills) ? skills : JSON.parse(skills);
     }
   } catch (parseError) {
     console.error('❌ JSON parsing error for education, experience, or skills:', parseError);
     return res.status(400).json({ success: false, error: 'Invalid format for education, experience, or skills. Please ensure they are valid JSON arrays.' });
   }
 
-  user.isProfileComplete = user.profileCompletion === 100;
+  // Save to update virtual calculation
+  await candidateProfile.save();
+  
+  candidateProfile.isProfileComplete = candidateProfile.profileCompletion === 100;
+  await candidateProfile.save();
 
-  await user.save({ validateBeforeSave: true });
+  const updatedProfile = await CandidateProfile.findOne({ user: req.user._id });
 
-  const updatedUser = await User.findById(user._id)
-    .select('-password -verificationToken -resetPasswordToken -resetPasswordExpire')
-    .populate('skills');
+  const userData = {
+    _id: user._id,
+    userId: user.userId,
+    name: user.name,
+    email: user.email,
+    isVerified: user.isVerified
+  };
 
   res.json({
     success: true,
     message: 'Profile updated successfully',
-    data: { user: updatedUser, profileCompletion: updatedUser.profileCompletion }
+    data: { 
+        user: { ...userData, ...updatedProfile.toObject() }, 
+        profileCompletion: updatedProfile.profileCompletion 
+    }
+  });
+});
+
+const uploadProfilePic = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({
+      success: false,
+      error: 'No file uploaded. Please select a profile picture.'
+    });
+  }
+
+  const candidateProfile = await CandidateProfile.findOne({ user: req.user._id });
+
+  if (!candidateProfile) {
+    return res.status(404).json({ success: false, error: 'Candidate profile not found.' });
+  }
+
+  if (candidateProfile.profilePic) {
+    const oldFilename = candidateProfile.profilePic.split('/').pop();
+    const newFilename = req.file.filename;
+    if (oldFilename !== newFilename) { 
+      try {
+        await deleteFile(oldFilename); 
+        console.log(`✅ Old profile pic ${oldFilename} deleted.`);
+      } catch (fileError) {
+        console.warn(`⚠️ Could not delete old profile pic ${oldFilename}:`, fileError.message);
+      }
+    }
+  }
+
+  candidateProfile.profilePic = req.file.path; // Cloudinary URL
+  await candidateProfile.save();
+  
+  // Update completion status
+  candidateProfile.isProfileComplete = candidateProfile.profileCompletion === 100;
+  await candidateProfile.save();
+
+  res.json({
+    success: true,
+    message: 'Profile picture uploaded successfully!',
+    data: {
+      profilePic: candidateProfile.profilePic
+    }
   });
 });
 
@@ -78,69 +158,92 @@ const uploadResume = asyncHandler(async (req, res) => {
     });
   }
 
-  const user = await User.findById(req.user._id);
+  const candidateProfile = await CandidateProfile.findOne({
+    user: req.user._id
+  });
 
-  if (!user) {
-    return res.status(404).json({ success: false, error: 'User not found.' });
+  if (!candidateProfile) {
+    return res.status(404).json({
+      success: false,
+      error: 'Candidate profile not found.'
+    });
   }
 
-  if (user.resumeUrl) {
-    const oldFilename = user.resumeUrl.split('/').pop();
-    const newFilename = req.file.filename;
-    if (oldFilename !== newFilename) { 
-      try {
-        await deleteFile(oldFilename); 
-        console.log(`✅ Old resume file ${oldFilename} deleted successfully.`);
-      } catch (fileError) {
-        console.warn(`⚠️ Could not delete old resume file ${oldFilename}:`, fileError.message);
-      }
+  /* ---------------- DELETE OLD RESUME ---------------- */
+  if (candidateProfile.resumePublicId) {
+    await deleteFile(candidateProfile.resumePublicId, 'raw');
+  } else if (candidateProfile.resumeUrl) {
+    // Fallback for VERY old records
+    try {
+      const url = new URL(candidateProfile.resumeUrl);
+      const parts = url.pathname.split('/');
+      const folder = parts[parts.length - 2];
+      const filename = parts[parts.length - 1].split('.')[0];
+      const publicId = `${folder}/${filename}`;
+
+      await deleteFile(publicId, 'raw');
+    } catch (err) {
+      console.warn('⚠️ Could not parse old resume URL');
     }
   }
 
-  user.resumeUrl = getFileUrl(req.file.filename);
-  await user.save({ validateBeforeSave: true });
+  /* ---------------- SAVE NEW RESUME ---------------- */
+  candidateProfile.resumeUrl = req.file.path;        // Cloudinary URL
+  candidateProfile.resumePublicId = req.file.filename; // FULL public_id
+  candidateProfile.isProfileComplete =
+    candidateProfile.profileCompletion === 100;
 
-  res.json({
+  await candidateProfile.save();
+
+  res.status(200).json({
     success: true,
     message: 'Resume uploaded successfully!',
     data: {
-      resumeUrl: user.resumeUrl
+      resumeUrl: candidateProfile.resumeUrl
     }
   });
 });
 
-const deleteResume = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
+/* ------------------------------------------------ */
 
-  if (!user) {
-    return res.status(404).json({ success: false, error: 'User not found.' });
-  }
-  
-  if (!user.resumeUrl) {
-    return res.status(400).json({
+const deleteResume = asyncHandler(async (req, res) => {
+  const candidateProfile = await CandidateProfile.findOne({
+    user: req.user._id
+  });
+
+  if (!candidateProfile) {
+    return res.status(404).json({
       success: false,
-      error: 'No resume found to delete for this user.'
+      error: 'Candidate profile not found.'
     });
   }
 
-  const filename = user.resumeUrl.split('/').pop();
-  try {
-    await deleteFile(filename); 
-    console.log(`✅ Resume file ${filename} deleted successfully from storage.`);
-  } catch (fileError) {
-    console.warn(`⚠️ Could not delete resume file ${filename} from storage:`, fileError.message);
+  if (!candidateProfile.resumePublicId) {
+    return res.status(400).json({
+      success: false,
+      error: 'No resume found to delete.'
+    });
   }
 
-  user.resumeUrl = undefined;
-  await user.save({ validateBeforeSave: true });
+  await deleteFile(candidateProfile.resumePublicId, 'raw');
 
-  res.json({
+  candidateProfile.resumeUrl = undefined;
+  candidateProfile.resumePublicId = undefined;
+  candidateProfile.isProfileComplete =
+    candidateProfile.profileCompletion === 100;
+
+  await candidateProfile.save();
+
+  res.status(200).json({
     success: true,
     message: 'Resume deleted successfully!'
   });
 });
 
+
 const getUserApplications = asyncHandler(async (req, res) => {
+  // Application.applicant refs User (ObjectId).
+  // req.user._id is the User ObjectId.
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
   const status = req.query.status || 'all'; 
@@ -272,6 +375,7 @@ const deleteUserAccount = asyncHandler(async (req, res) => {
   const { password } = req.body;
 
   const user = await User.findById(req.user._id).select('+password');
+  const candidateProfile = await CandidateProfile.findOne({ user: req.user._id });
 
   if (!user) {
     return res.status(404).json({ success: false, error: 'User not found.' });
@@ -283,8 +387,9 @@ const deleteUserAccount = asyncHandler(async (req, res) => {
       error: 'Incorrect password. Account deletion requires correct password.'
     });
   }
-  if (user.resumeUrl) {
-    const filename = user.resumeUrl.split('/').pop();
+  
+  if (candidateProfile && candidateProfile.resumeUrl) {
+    const filename = candidateProfile.resumeUrl.split('/').pop();
     try {
       await deleteFile(filename);
       console.log(`✅ Resume file ${filename} deleted during account deletion.`);
@@ -295,6 +400,10 @@ const deleteUserAccount = asyncHandler(async (req, res) => {
 
   await Application.deleteMany({ applicant: req.user._id });
   console.log(`✅ All applications for user ${req.user._id} deleted.`);
+
+  if (candidateProfile) {
+    await CandidateProfile.findByIdAndDelete(candidateProfile._id);
+  }
 
   await User.findByIdAndDelete(req.user._id);
   console.log(`✅ User account ${req.user._id} deleted successfully.`);
@@ -307,6 +416,7 @@ const deleteUserAccount = asyncHandler(async (req, res) => {
 module.exports = {
   getUserProfile,
   updateUserProfile,
+  uploadProfilePic,
   uploadResume,
   deleteResume,
   getUserApplications,

@@ -26,7 +26,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../utils/api';
 
-export default function Notifications() {
+export default function Notifications({ isEmbedded = false }) {
   const { user, userType } = useAuth();
   const router = useRouter();
   const [notifications, setNotifications] = useState([]);
@@ -240,18 +240,20 @@ export default function Notifications() {
         <meta name="description" content="View and manage your notifications" />
       </Head>
 
-      <div className="min-h-screen bg-black relative overflow-hidden">
+      <div className={`min-h-screen ${isEmbedded ? '' : 'bg-black relative overflow-hidden'}`}>
         {/* Background Effects */}
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-red-500/5 to-orange-400/5"></div>
-          <motion.div
-            className="absolute top-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"
-            animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
-            transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        </div>
+        {!isEmbedded && (
+          <div className="absolute inset-0">
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-red-500/5 to-orange-400/5"></div>
+            <motion.div
+              className="absolute top-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"
+              animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          </div>
+        )}
 
-        <div className="relative z-10 min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+        <div className={`relative z-10 ${isEmbedded ? '' : 'min-h-screen py-8 px-4 sm:px-6 lg:px-8'}`}>
           <div className="max-w-4xl mx-auto">
             {/* Header */}
             <motion.div
@@ -259,32 +261,51 @@ export default function Notifications() {
               animate={{ opacity: 1, y: 0 }}
               className="mb-8"
             >
-              <div className="flex items-center space-x-4 mb-4">
-                <Link 
-                  href={userType === 'employer' ? '/employer/dashboard' : '/user/dashboard'} 
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  <FaArrowLeft className="text-xl" />
-                </Link>
-                <div className="flex-1 flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <FaBell className="text-3xl text-orange-500" />
-                    <div>
-                      <h1 className="text-3xl font-bold text-white">Notifications</h1>
-                      <p className="text-gray-400 text-sm">
-                              {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up!'}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setShowPreferences(true)}
-                    className="p-2 text-gray-400 hover:text-white transition-colors"
-                    title="Notification Settings"
+              {!isEmbedded && (
+                <div className="flex items-center space-x-4 mb-4">
+                  <Link 
+                    href={userType === 'employer' ? '/employer/dashboard' : '/user/dashboard'} 
+                    className="text-gray-400 hover:text-white transition-colors"
                   >
-                    <FaCog className="text-xl" />
-                  </button>
+                    <FaArrowLeft className="text-xl" />
+                  </Link>
+                  <div className="flex-1 flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <FaBell className="text-3xl text-orange-500" />
+                      <div>
+                        <h1 className="text-3xl font-bold text-white">Notifications</h1>
+                        <p className="text-gray-400 text-sm">
+                                {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up!'}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowPreferences(true)}
+                      className="p-2 text-gray-400 hover:text-white transition-colors"
+                      title="Notification Settings"
+                    >
+                      <FaCog className="text-xl" />
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
+              {isEmbedded && (
+                 <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Notifications</h1>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">
+                                {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up!'}
+                        </p>
+                    </div>
+                    <button
+                      onClick={() => setShowPreferences(true)}
+                      className="p-2 text-gray-400 hover:text-white transition-colors"
+                      title="Notification Settings"
+                    >
+                      <FaCog className="text-xl" />
+                    </button>
+                 </div>
+              )}
             </motion.div>
 
             {/* Filters and Actions */}

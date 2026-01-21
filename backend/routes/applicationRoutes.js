@@ -8,7 +8,9 @@ const {
   getUserApplications,
   updateApplicationStatus,
   withdrawApplication,
-  getApplicationById
+
+  getApplicationById,
+  checkApplicationStatus
 } = require('../controllers/applicationController');
 
 const {
@@ -19,10 +21,12 @@ const {
   requireAdmin
 } = require('../middleware/authMiddleware');
 
+const { uploadResume } = require('../middleware/uploadMiddleware');
+
 // Validation middleware
 const validateApplication = [
   body('jobId').isMongoId().withMessage('Invalid job ID'),
-  body('coverLetter').trim().isLength({ min: 10, max: 2000 }).withMessage('Cover letter must be between 10 and 2000 characters')
+  body('coverLetter').optional().trim().isLength({ max: 2000 }).withMessage('Cover letter cannot exceed 2000 characters')
 ];
 
 const validateStatusUpdate = [
@@ -31,13 +35,19 @@ const validateStatusUpdate = [
 ];
 
 // Job seeker routes
-router.post('/', protect, requireVerification, requireJobSeeker, validateApplication, submitApplication);
+router.post('/', protect, requireVerification, requireJobSeeker, uploadResume, validateApplication, submitApplication);
+router.get('/check/:jobId', protect, checkApplicationStatus);
 router.get('/user', protect, requireVerification, requireJobSeeker, getUserApplications);
 router.delete('/:applicationId', protect, requireVerification, requireJobSeeker, withdrawApplication);
 
 // Employer/Admin routes
 router.get('/job/:jobId', protect, requireVerification, getApplicationsForJob);
 router.put('/:applicationId/status', protect, requireVerification, validateStatusUpdate, updateApplicationStatus);
-router.get('/:applicationId', protect, requireVerification, getApplicationById);
+router.get('/:applicationId', protect, requireVerification, (req, res, next) => {
+  if (!req.params.applicationId.match(/^[0-9a-fA-F]{24}$/)) {
+    return res.status(404).json({ success: false, error: 'Application not found' });
+  }
+  next();
+}, getApplicationById);
 
 module.exports = router; 

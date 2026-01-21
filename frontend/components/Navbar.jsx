@@ -18,11 +18,14 @@ import {
   FaComments
 } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
+import LogoutModal from './LogoutModal';
 
 export default function Navbar({ sidebarOpen, setSidebarOpen }) {
   const { user, logout, isEmployer, isAdmin } = useAuth();
   const router = useRouter();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [logoutLoading, setLogoutLoading] = useState(false);
 
   const navigation = [
     { name: 'Home', href: '/', icon: FaHome },
@@ -43,29 +46,40 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
       href: isEmployer() ? '/employer/profile' : '/user/profile',
       icon: FaUser,
     },
-    {
-      name: 'Messages',
-      href: '/messages',
-      icon: FaComments,
-    },
-    {
-      name: 'Notifications',
-      href: '/notifications',
-      icon: FaBell,
-    },
-    {
-      name: 'Settings',
-      href: '/settings',
-      icon: FaCog,
-    },
+    // Only show these for non-employers (employers have them in sidebar)
+    ...(!isEmployer() ? [
+      {
+        name: 'Messages',
+        href: '/messages',
+        icon: FaComments,
+      },
+      {
+        name: 'Notifications',
+        href: '/notifications',
+        icon: FaBell,
+      },
+      {
+        name: 'Settings',
+        href: '/settings',
+        icon: FaCog,
+      }
+    ] : [])
   ];
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
     setUserMenuOpen(false);
-    logout();
+    setLogoutModalOpen(true);
+  };
+
+  const handleConfirmLogout = async () => {
+    setLogoutLoading(true);
+    await logout();
+    setLogoutLoading(false);
+    setLogoutModalOpen(false);
   };
 
   return (
+    <>
     <nav className="bg-black/90 backdrop-blur-2xl border-b border-white/10 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
@@ -137,7 +151,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
                       ))}
                       <div className="my-1 border-t border-white/10" />
                       <button
-                        onClick={handleLogout}
+                        onClick={handleLogoutClick}
                         className="flex items-center space-x-3 px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 w-full text-left"
                       >
                         <FaSignOutAlt className="w-4 h-4" />
@@ -222,5 +236,12 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
         </AnimatePresence>
       </div>
     </nav>
+    <LogoutModal 
+      isOpen={logoutModalOpen} 
+      onClose={() => setLogoutModalOpen(false)} 
+      onConfirm={handleConfirmLogout}
+      loading={logoutLoading}
+    />
+    </>
   );
 } 

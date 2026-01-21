@@ -12,8 +12,10 @@ const {
   resendVerification,
   forgotPassword,
   resetPassword,
+  updatePassword, // Added import
   getMe, // Renamed from getProfile in controller
-  logout
+  logout,
+  login
 } = require('../controllers/authController');
 
 const {
@@ -60,6 +62,7 @@ const validateResendVerification = [
 ];
 
 // Public authentication routes
+router.post('/login', validateLogin, login); // Unified login route
 router.post('/register-user', validateRegistration, registerUser);
 router.post('/register-employer', validateEmployerRegistration, registerEmployer);
 router.post('/login-user', validateLogin, loginUser);
@@ -73,10 +76,10 @@ router.put('/reset-password', validateResetPassword, resetPassword); // Using PU
 // Protected auth routes (requires authentication)
 // The /me endpoint here provides current user/employer details without needing to go to specific profile routes
 router.get('/me', protect, getMe);
+router.put('/update-password', protect, updatePassword); // Added password update route
 router.post('/logout', protect, logout); // Logout route, clears cookie
 
 // The following routes are now handled by their specific controllers/routes:
-// router.post('/complete-profile', protect, completeProfile); // Moved to userRoutes/employerRoutes
 // router.post('/employer/upload-logo', getUserFromToken, uploadLogo, uploadEmployerLogo); // Moved to employerRoutes
 
 module.exports = router;

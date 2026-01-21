@@ -116,6 +116,18 @@ const sendEmail = async (to, template, data = {}) => {
       html: emailContent.html
     };
 
+    // LOGGING FOR TESTING
+    if (template === 'verification') {
+      console.log('--- VERIFICATION LINK CHECK ---');
+      console.log(`To: ${to}`);
+      // Extract link from HTML or just log raw token if passed
+      // data is [name, token]
+      const token = data[1];
+      console.log(`Token: ${token}`);
+      console.log(`Link: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/verify?token=${token}`);
+      console.log('-------------------------------');
+    }
+
     const info = await transporter.sendMail(mailOptions);
     console.log('📧 Email sent:', info.messageId);
     return { success: true, messageId: info.messageId };

@@ -84,12 +84,7 @@ const jobSchema = new mongoose.Schema({
     trim: true,
     maxlength: [200, 'Job title cannot exceed 200 characters']
   },
-  company: { 
-    type: String,
-    required: [true, 'Company name is required'],
-    trim: true,
-    maxlength: [200, 'Company name cannot exceed 200 characters']
-  },
+
   location: {
     type: String,
     required: [true, 'Location is required'],
@@ -101,6 +96,12 @@ const jobSchema = new mongoose.Schema({
     enum: ['Full-time', 'Part-time', 'Contract', 'Internship', 'Temporary', 'Remote'],
     required: [true, 'Job type is required'],
     default: 'Full-time'
+  },
+  experienceLevel: {
+    type: String,
+    enum: ['entry', 'junior', 'mid', 'senior', 'executive'],
+    required: [true, 'Experience level is required'],
+    default: 'entry'
   },
   salary: {
     type: Number,
@@ -138,19 +139,34 @@ const jobSchema = new mongoose.Schema({
   },
   employer: { 
     type: mongoose.Schema.ObjectId,
-    ref: 'Employer',
+    ref: 'EmployerProfile', // changed from User to EmployerProfile to access company details easily
     required: true
+  },
+  employerUserId: {
+    type: String, // Public User ID
+    required: true,
+    index: true
   },
   isActive: { 
     type: Boolean,
     default: true
+  },
+  applications: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true 
 });
 
+// Method to increment application count
+jobSchema.methods.incrementApplications = function() {
+  this.applications += 1;
+  return this.save();
+};
+
 // Create text index for search functionality
-jobSchema.index({ title: 'text', company: 'text', location: 'text', description: 'text' });
+jobSchema.index({ title: 'text', location: 'text', description: 'text' });
 
 
 module.exports = mongoose.model('Job', jobSchema);

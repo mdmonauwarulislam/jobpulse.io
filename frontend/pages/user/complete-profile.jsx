@@ -145,9 +145,9 @@ export default function CompleteProfile() {
                     <label className="block font-medium mb-1 text-white">Education</label>
                     {eduFields.map((field, idx) => (
                       <div key={field.id} className="mb-2 border border-white/10 p-2 rounded bg-white/5">
-                        <input {...register(`education.${idx}.degree`)} className="w-full px-3 py-2 mb-1 bg-white/10 border border-white/20 rounded text-white placeholder-gray-400" placeholder="Degree" />
-                        <input {...register(`education.${idx}.institution`)} className="w-full px-3 py-2 mb-1 bg-white/10 border border-white/20 rounded text-white placeholder-gray-400" placeholder="Institution" />
-                        <input {...register(`education.${idx}.year`)} className="w-full px-3 py-2 mb-1 bg-white/10 border border-white/20 rounded text-white placeholder-gray-400" placeholder="Year" />
+                        <input {...register(`education.${idx}.degree`, { required: true })} className={`w-full px-3 py-2 mb-1 bg-white/10 border ${errors.education?.[idx]?.degree ? 'border-red-500' : 'border-white/20'} rounded text-white placeholder-gray-400`} placeholder="Degree *" />
+                        <input {...register(`education.${idx}.institution`, { required: true })} className={`w-full px-3 py-2 mb-1 bg-white/10 border ${errors.education?.[idx]?.institution ? 'border-red-500' : 'border-white/20'} rounded text-white placeholder-gray-400`} placeholder="Institution *" />
+                        <input {...register(`education.${idx}.year`, { required: true })} className={`w-full px-3 py-2 mb-1 bg-white/10 border ${errors.education?.[idx]?.year ? 'border-red-500' : 'border-white/20'} rounded text-white placeholder-gray-400`} placeholder="Year *" />
                         <input {...register(`education.${idx}.description`)} className="w-full px-3 py-2 mb-1 bg-white/10 border border-white/20 rounded text-white placeholder-gray-400" placeholder="Description" />
                         <button type="button" onClick={() => removeEdu(idx)} className="text-red-400 text-xs mt-1">Remove</button>
                       </div>
@@ -158,9 +158,9 @@ export default function CompleteProfile() {
                     <label className="block font-medium mb-1 text-white">Experience</label>
                     {expFields.map((field, idx) => (
                       <div key={field.id} className="mb-2 border border-white/10 p-2 rounded bg-white/5">
-                        <input {...register(`experience.${idx}.jobTitle`)} className="w-full px-3 py-2 mb-1 bg-white/10 border border-white/20 rounded text-white placeholder-gray-400" placeholder="Job Title" />
-                        <input {...register(`experience.${idx}.company`)} className="w-full px-3 py-2 mb-1 bg-white/10 border border-white/20 rounded text-white placeholder-gray-400" placeholder="Company" />
-                        <input {...register(`experience.${idx}.duration`)} className="w-full px-3 py-2 mb-1 bg-white/10 border border-white/20 rounded text-white placeholder-gray-400" placeholder="Duration" />
+                        <input {...register(`experience.${idx}.jobTitle`, { required: true })} className={`w-full px-3 py-2 mb-1 bg-white/10 border ${errors.experience?.[idx]?.jobTitle ? 'border-red-500' : 'border-white/20'} rounded text-white placeholder-gray-400`} placeholder="Job Title *" />
+                        <input {...register(`experience.${idx}.company`, { required: true })} className={`w-full px-3 py-2 mb-1 bg-white/10 border ${errors.experience?.[idx]?.company ? 'border-red-500' : 'border-white/20'} rounded text-white placeholder-gray-400`} placeholder="Company *" />
+                        <input {...register(`experience.${idx}.duration`, { required: true })} className={`w-full px-3 py-2 mb-1 bg-white/10 border ${errors.experience?.[idx]?.duration ? 'border-red-500' : 'border-white/20'} rounded text-white placeholder-gray-400`} placeholder="Duration *" />
                         <input {...register(`experience.${idx}.description`)} className="w-full px-3 py-2 mb-1 bg-white/10 border border-white/20 rounded text-white placeholder-gray-400" placeholder="Description" />
                         <button type="button" onClick={() => removeExp(idx)} className="text-red-400 text-xs mt-1">Remove</button>
                       </div>

@@ -17,6 +17,7 @@ import {
 } from 'react-icons/fa';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { api } from '../../../../utils/api';
+import DashboardLayout from '../../../../components/DashboardLayout';
 
 export default function EditJob() {
   const router = useRouter();
@@ -92,9 +93,14 @@ export default function EditJob() {
   };
 
   const onSubmit = async (data) => {
-    if (!user || user.role !== 'employer') {
-      toast.error('Only employers can edit jobs');
-      return;
+    // Check if user is employer - use userType from context or check profile
+    if (!user || (user.userType && user.userType !== 'employer') && (user.role && user.role !== 'employer')) {
+       // Fallback: if user exists but checks fail, maybe context isn't fully synced or using different field
+       // But usually userType from useAuth is the ground truth
+       if (userType !== 'employer') {
+          toast.error('Only employers can edit jobs');
+          return;
+       }
     }
 
     setSaving(true);
@@ -147,43 +153,38 @@ export default function EditJob() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="container-custom py-8">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-1/4 mb-8"></div>
-            <div className="h-96 bg-gray-300 dark:bg-gray-700 rounded"></div>
-          </div>
+      <DashboardLayout>
+        <div className="flex items-center justify-center p-12">
+           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="container-custom py-8">
-          <div className="text-center">
+      <DashboardLayout>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden min-h-[calc(100vh-100px)] flex flex-col items-center justify-center p-12 text-center">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Job Not Found</h1>
             <p className="text-gray-600 dark:text-gray-400 mb-6">The job you're trying to edit doesn't exist or has been removed.</p>
             <Link href="/employer/dashboard" className="btn-primary">
               <FaArrowLeft className="mr-2" />
               Back to Dashboard
             </Link>
-          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <>
+    <DashboardLayout>
       <Head>
         <title>Edit Job - JobPulse</title>
         <meta name="description" content="Edit your job posting on JobPulse" />
       </Head>
 
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="container-custom py-8">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden min-h-[calc(100vh-100px)]">
+        <div className="p-6 md:p-8">
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between">
@@ -220,7 +221,7 @@ export default function EditJob() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="max-w-4xl mx-auto"
+            className="max-w-5xl mx-auto"
           >
             <div className="card">
               <div className="card-body p-8">
@@ -540,8 +541,8 @@ export default function EditJob() {
               </div>
             </div>
           </motion.div>
-        </div>
+       </div>
       </div>
-    </>
+    </DashboardLayout>
   );
 } 

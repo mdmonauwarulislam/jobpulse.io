@@ -25,6 +25,11 @@ import Pagination from '../../components/Pagination';
 export default function JobsPage() {
   const router = useRouter();
   const [jobs, setJobs] = useState([]);
+
+  // Helper to validate MongoDB ObjectId
+  const isValidObjectId = (value) => {
+    return /^[a-fA-F0-9]{24}$/.test(value);
+  };
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({});
   const [filters, setFilters] = useState({
@@ -58,6 +63,7 @@ export default function JobsPage() {
   ];
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     fetchJobs();
   }, [router.query]);
 
@@ -74,7 +80,9 @@ export default function JobsPage() {
       });
 
       const response = await api.get(`/jobs?${params.toString()}`);
-      setJobs(response.data.data.jobs || []);
+      // Filter jobs with valid ObjectId _id only
+      const jobsData = response.data.data.jobs || [];
+      setJobs(jobsData.filter(job => isValidObjectId(job._id)));
       setPagination(response.data.data.pagination || {});
     } catch (error) {
       console.error('Error fetching jobs:', error);
@@ -429,7 +437,12 @@ export default function JobsPage() {
                       className={viewMode === 'grid' ? 'grid md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}
                     >
                       {jobs.map((job) => (
-                        <JobCard key={job._id} job={job} viewMode={viewMode} />
+                        <JobCard 
+                          key={job._id} 
+                          job={job} 
+                          viewMode={viewMode}
+                          onApply={() => router.push(`/jobs/${job._id}`)}
+                        />
                       ))}
                     </motion.div>
                   ) : (

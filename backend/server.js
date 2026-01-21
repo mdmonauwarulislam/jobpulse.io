@@ -32,22 +32,11 @@ app.use(compression()); // Compresses response bodies for faster loading
 
 // CORS configuration - Ensure your frontend URL is correctly set in .env
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000', // Allow requests from your frontend
+  // origin: process.env.FRONTEND_URL || 'http://localhost:3000', // Allow requests from your frontend
+  origin: "*", // Allow requests from your frontend
   credentials: true // Allow cookies to be sent with requests
 }));
 
-// Rate limiting - Applied to all /api/ routes
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // Max 100 requests per IP per window
-  message: {
-    success: false, // Indicate failure for rate limit errors
-    error: 'Too many requests from this IP, please try again later.'
-  },
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-});
-app.use('/api/', limiter); // Apply rate limiting to all routes under /api/
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' })); // Parses JSON request bodies

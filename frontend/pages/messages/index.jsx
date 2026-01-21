@@ -24,7 +24,7 @@ import {
 import { api } from '../../utils/api';
 import { useAuth } from '../../contexts/AuthContext';
 
-export default function Messages() {
+export default function Messages({ isEmbedded = false }) {
   const { user, userType } = useAuth();
   const router = useRouter();
   const [conversations, setConversations] = useState([]);
@@ -182,40 +182,51 @@ export default function Messages() {
         <meta name="description" content="Chat with employers and applicants" />
       </Head>
 
-      <div className="min-h-screen bg-black relative overflow-hidden">
-        {/* Background Effects */}
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-red-500/5 to-orange-400/5"></div>
-        </div>
+      <div className={`min-h-screen ${isEmbedded ? 'bg-transparent' : 'bg-black relative'} overflow-hidden`}>
+        {/* Background Effects - Only show if NOT embedded */}
+        {!isEmbedded && (
+          <div className="absolute inset-0">
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-red-500/5 to-orange-400/5"></div>
+          </div>
+        )}
 
         <div className="relative z-10 min-h-screen flex flex-col">
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-black/50 backdrop-blur-xl border-b border-white/10 px-4 py-4"
-          >
-            <div className="max-w-7xl mx-auto flex items-center space-x-4">
-              <Link href={userType === 'employer' ? '/employer/dashboard' : '/user/dashboard'} className="text-gray-400 hover:text-white transition-colors">
-                <FaArrowLeft className="text-xl" />
-              </Link>
-              <div className="flex items-center space-x-3">
-                <FaComments className="text-2xl text-orange-500" />
-                <h1 className="text-xl font-bold text-white">Messages</h1>
+          {/* Header - Only show if NOT embedded */}
+          {!isEmbedded && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-black/50 backdrop-blur-xl border-b border-white/10 px-4 py-4"
+            >
+              <div className="max-w-7xl mx-auto flex items-center space-x-4">
+                <Link href={userType === 'employer' ? '/employer/dashboard' : '/user/dashboard'} className="text-gray-400 hover:text-white transition-colors">
+                  <FaArrowLeft className="text-xl" />
+                </Link>
+                <div className="flex items-center space-x-3">
+                  <FaComments className="text-2xl text-orange-500" />
+                  <h1 className="text-xl font-bold text-white">Messages</h1>
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          )}
 
-          {/* Main Content */}
-          <div className="flex-1 flex overflow-hidden">
+          {/* If embedded, show a simple title or none */}
+          {isEmbedded && (
+             <div className="mb-6 flex items-center justify-between">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Messages</h1>
+             </div>
+          )}
+
+          {/* Main Content - Adjusted height/layout for embedded */}
+          <div className={`flex-1 flex overflow-hidden ${isEmbedded ? 'bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm h-[calc(100vh-140px)]' : ''}`}>
             {/* Conversations List */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className={`w-full md:w-96 bg-black/30 border-r border-white/10 flex flex-col ${selectedConversation ? 'hidden md:flex' : 'flex'}`}
+              className={`w-full md:w-96 ${isEmbedded ? 'bg-gray-50 dark:bg-gray-900/50' : 'bg-black/30'} border-r border-gray-200 dark:border-white/10 flex flex-col ${selectedConversation ? 'hidden md:flex' : 'flex'}`}
             >
               {/* Search */}
-              <div className="p-4 border-b border-white/10">
+              <div className="p-4 border-b border-gray-200 dark:border-white/10">
                 <div className="relative">
                   <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input

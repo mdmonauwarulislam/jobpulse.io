@@ -1,7 +1,7 @@
 const Application = require('../models/Application');
 const Job = require('../models/Job');
 const User = require('../models/User');
-const Employer = require('../models/Employer');
+const EmployerProfile = require('../models/EmployerProfile');
 const { sendEmail } = require('../config/mailer');
 
 // Submit application
@@ -33,26 +33,42 @@ const submitApplication = async (req, res) => {
     }
 
     // Create application
+    let resumeUrl = req.user.resumeUrl;
+    if (req.file) {
+      resumeUrl = req.file.path;
+    }
+
     const application = await Application.create({
       job: jobId,
       applicant: applicantId,
       coverLetter,
-      resumeUrl: req.user.resumeUrl
+      resumeUrl
     });
 
     // Increment job application count
     await job.incrementApplications();
 
     // Get employer info for email
-    const employer = await Employer.findById(job.postedBy);
+    const employer = await EmployerProfile.findOne({ user: job.employer });
     
     // Send notification email to employer
     if (employer) {
-      await sendEmail(
-        employer.email,
-        'newApplication',
-        [job.title, job.company, req.user.name]
-      );
+      // EmployerProfile links to User, but we need the User's email.
+      // We should probably populate it or fetch User separately if not populated.
+      // However, job.employer is likely the User ObjectId (Ref: "User") or EmployerProfile ObjectId?
+      // Let's check Job model. employer is Ref: 'EmployerProfile'.
+      // So job.employer is the Profile ID (or User ID depending on recent changes).
+      // Job.js says: employer: { type: Schema.ObjectId, ref: 'EmployerProfile' }
+      // So job.employer is the EmployerProfile ID.
+      // We need to fetch User from EmployerProfile.
+       const employerUser = await User.findById(employer.user);
+       if (employerUser) {
+          await sendEmail(
+            employerUser.email,
+            'newApplication',
+            [job.title, employer.company, req.user.name]
+          );
+       }
     }
 
     // Send confirmation email to applicant
@@ -364,11 +380,39 @@ const getApplicationById = async (req, res) => {
   }
 };
 
+// Check application status
+const checkApplicationStatus = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const userId = req.user._id;
+
+    const application = await Application.findOne({
+      job: jobId,
+      applicant: userId
+    })
+    .select('status createdAt');
+
+    res.json({
+      success: true,
+      hasApplied: !!application,
+      application: application || null
+    });
+  } catch (error) {
+    console.error('❌ Check application status error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error checking application status'
+    });
+  }
+};
+
 module.exports = {
   submitApplication,
   getApplicationsForJob,
   getUserApplications,
   updateApplicationStatus,
+  updateApplicationStatus,
   withdrawApplication,
-  getApplicationById
+  getApplicationById,
+  checkApplicationStatus
 }; 

@@ -1,30 +1,54 @@
 const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const path = require('path');
-const fs = require('fs');
 
-// Ensure upload directory exists
-const uploadDir = process.env.UPLOAD_PATH || './uploads';
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+/* ----------------------------------
+   CLOUDINARY CONFIG
+---------------------------------- */
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
-// Configure storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    // Create unique filename with timestamp
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+/* ----------------------------------
+   STORAGE CONFIG
+---------------------------------- */
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: async (req, file) => {
+    const parsed = path.parse(file.originalname);
+    const cleanName = parsed.name.replace(/[^a-zA-Z0-9-_]/g, '_');
+    const timestamp = Date.now();
+
+    const rawTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+
+    if (rawTypes.includes(file.mimetype)) {
+      return {
+        folder: 'jobpulse_uploads',
+        resource_type: 'raw',
+        public_id: `${cleanName}-${timestamp}${parsed.ext}`
+      };
+    }
+
+    return {
+      folder: 'jobpulse_uploads',
+      resource_type: 'image',
+      public_id: `${cleanName}-${timestamp}`
+    };
   }
 });
 
-// File filter function
+/* ----------------------------------
+   FILE FILTER
+---------------------------------- */
 const fileFilter = (req, file, cb) => {
-  // Allowed file types
-  const allowedTypes = [
+  const allowed = [
     'application/pdf',
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -34,98 +58,51 @@ const fileFilter = (req, file, cb) => {
     'image/gif'
   ];
 
-  // Check file type
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Invalid file type. Only PDF, DOC, DOCX, and image files are allowed.'), false);
-  }
+  if (allowed.includes(file.mimetype)) cb(null, true);
+  else cb(new Error('Invalid file type'), false);
 };
 
-// Configure multer
+/* ----------------------------------
+   MULTER
+---------------------------------- */
 const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
+  storage,
+  fileFilter,
   limits: {
-    fileSize: parseInt(process.env.MAX_FILE_SIZE) || 5 * 1024 * 1024, 
-    files: 1 
+    fileSize: 10 * 1024 * 1024 // 10MB
   }
 });
 
-// Resume upload middleware
-const uploadResume = upload.single('resume');
-
-// Company logo upload middleware
-const uploadLogo = upload.single('logo');
-
-// Multiple files upload (for future use)
-const uploadMultiple = multer({
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: {
-    fileSize: parseInt(process.env.MAX_FILE_SIZE) || 5 * 1024 * 1024,
-    files: 5 
-  }
-}).array('files', 5);
-
-// Error handling wrapper
-const handleUploadError = (uploadMiddleware) => {
-  return (req, res, next) => {
-    uploadMiddleware(req, res, (err) => {
-      if (err instanceof multer.MulterError) {
-        if (err.code === 'LIMIT_FILE_SIZE') {
-          return res.status(400).json({
-            success: false,
-            error: 'File too large. Maximum size is 5MB.'
-          });
-        }
-        if (err.code === 'LIMIT_FILE_COUNT') {
-          return res.status(400).json({
-            success: false,
-            error: 'Too many files. Maximum is 5 files.'
-          });
-        }
-        if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-          return res.status(400).json({
-            success: false,
-            error: 'Unexpected file field.'
-          });
-        }
-      }
-      
-      if (err) {
-        return res.status(400).json({
-          success: false,
-          error: err.message
-        });
-      }
-      
-      next();
-    });
-  };
-};
-
-// Helper function to delete file
-const deleteFile = (filename) => {
-  if (filename) {
-    const filepath = path.join(uploadDir, filename);
-    if (fs.existsSync(filepath)) {
-      fs.unlinkSync(filepath);
-      console.log(`🗑️ Deleted file: ${filename}`);
+/* ----------------------------------
+   ERROR WRAPPER
+---------------------------------- */
+const handleUploadError = (middleware) => (req, res, next) => {
+  middleware(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ success: false, error: err.message });
     }
-  }
+    if (err) {
+      return res.status(400).json({ success: false, error: err.message });
+    }
+    next();
+  });
 };
 
-// Helper function to get file URL
-const getFileUrl = (filename) => {
-  if (!filename) return null;
-  return `${process.env.FRONTEND_URL || 'http://localhost:5000'}/uploads/${filename}`;
+/* ----------------------------------
+   DELETE HELPER
+---------------------------------- */
+const deleteFile = async (publicId, resourceType = 'raw') => {
+  if (!publicId) return;
+
+  await cloudinary.uploader.destroy(publicId, { resource_type: resourceType,  content_disposition: 'inline' });
 };
 
+/* ----------------------------------
+   EXPORTS
+---------------------------------- */
 module.exports = {
-  uploadResume: handleUploadError(uploadResume),
-  uploadLogo: handleUploadError(uploadLogo),
-  uploadMultiple: handleUploadError(uploadMultiple),
-  deleteFile,
-  getFileUrl
-}; 
+  uploadResume: handleUploadError(upload.single('resume')),
+  uploadLogo: handleUploadError(upload.single('logo')),
+  uploadMultiple: handleUploadError(upload.array('files', 5)),
+  deleteFile
+};

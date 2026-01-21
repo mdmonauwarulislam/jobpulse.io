@@ -1,5 +1,5 @@
 const User = require('../models/User');
-const Employer = require('../models/Employer');
+const EmployerProfile = require('../models/EmployerProfile');
 const Job = require('../models/Job');
 const Application = require('../models/Application');
 const Notification = require('../models/Notification');
@@ -216,14 +216,14 @@ const deleteUser = asyncHandler(async (req, res) => {
   res.json({ success: true, message: 'User deleted successfully' });
 });
 
-// --- Employer Management (Admin Only) ---
+// --- EmployerProfile Management (Admin Only) ---
 
 /**
  * @desc Get all employers with pagination and search
  * @route GET /api/admin/employers
  * @access Private (Admin Only)
  */
-const getAllEmployers = asyncHandler(async (req, res) => {
+const getAllEmployerProfiles = asyncHandler(async (req, res) => {
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
   const search = req.query.search;
@@ -244,13 +244,13 @@ const getAllEmployers = asyncHandler(async (req, res) => {
   const skip = (page - 1) * limit;
 
 
-  const employers = await Employer.find(filter)
+  const employers = await EmployerProfile.find(filter)
     .select('-password -verificationToken -resetPasswordToken -resetPasswordExpire')
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
 
-  const total = await Employer.countDocuments(filter);
+  const total = await EmployerProfile.countDocuments(filter);
   const totalPages = Math.ceil(total / limit);
 
   res.json({
@@ -260,7 +260,7 @@ const getAllEmployers = asyncHandler(async (req, res) => {
       pagination: {
         currentPage: page,
         totalPages,
-        totalEmployers: total,
+        totalEmployerProfiles: total,
         hasNextPage: page < totalPages,
         hasPrevPage: page > 1
       }
@@ -274,14 +274,14 @@ const getAllEmployers = asyncHandler(async (req, res) => {
  * @route GET /api/admin/employers/:employerId
  * @access Private (Admin Only)
  */
-const getEmployerById = asyncHandler(async (req, res) => {
+const getEmployerProfileById = asyncHandler(async (req, res) => {
   const { employerId } = req.params;
 
-  const employer = await Employer.findById(employerId)
+  const employer = await EmployerProfile.findById(employerId)
     .select('-password -verificationToken -resetPasswordToken -resetPasswordExpire');
 
   if (!employer) {
-    return res.status(404).json({ success: false, error: 'Employer not found.' });
+    return res.status(404).json({ success: false, error: 'EmployerProfile not found.' });
   }
 
   res.json({ success: true, data: { employer } });
@@ -292,18 +292,18 @@ const getEmployerById = asyncHandler(async (req, res) => {
  * @route PUT /api/admin/employers/:employerId
  * @access Private (Admin Only)
  */
-const updateEmployer = asyncHandler(async (req, res) => {
+const updateEmployerProfile = asyncHandler(async (req, res) => {
   const { employerId } = req.params;
   const updateData = req.body; 
 
-  const employer = await Employer.findByIdAndUpdate(
+  const employer = await EmployerProfile.findByIdAndUpdate(
     employerId,
     updateData,
     { new: true, runValidators: true }
   ).select('-password -verificationToken -resetPasswordToken -resetPasswordExpire');
 
   if (!employer) {
-    return res.status(404).json({ success: false, error: 'Employer not found.' });
+    return res.status(404).json({ success: false, error: 'EmployerProfile not found.' });
   }
 
   // Recalculate isProfileComplete based on the virtual if profile fields were updated
@@ -312,14 +312,14 @@ const updateEmployer = asyncHandler(async (req, res) => {
 
   // Audit log
   await logAdminAction({
-    action: 'updateEmployer',
+    action: 'updateEmployerProfile',
     performedBy: req.user._id,
-    targetType: 'Employer',
+    targetType: 'EmployerProfile',
     targetId: employerId,
     details: updateData
   });
 
-  res.json({ success: true, message: 'Employer updated successfully', data: { employer } });
+  res.json({ success: true, message: 'EmployerProfile updated successfully', data: { employer } });
 });
 
 /**
@@ -327,12 +327,12 @@ const updateEmployer = asyncHandler(async (req, res) => {
  * @route DELETE /api/admin/employers/:employerId
  * @access Private (Admin Only)
  */
-const deleteEmployer = asyncHandler(async (req, res) => {
+const deleteEmployerProfile = asyncHandler(async (req, res) => {
   const { employerId } = req.params;
 
-  const employer = await Employer.findById(employerId);
+  const employer = await EmployerProfile.findById(employerId);
   if (!employer) {
-    return res.status(404).json({ success: false, error: 'Employer not found.' });
+    return res.status(404).json({ success: false, error: 'EmployerProfile not found.' });
   }
 
   // Delete employer's jobs
@@ -352,18 +352,18 @@ const deleteEmployer = asyncHandler(async (req, res) => {
 
   // Delete employer document
   await employer.deleteOne();
-  console.log(`✅ Employer ${employerId} deleted by admin.`);
+  console.log(`✅ EmployerProfile ${employerId} deleted by admin.`);
 
   // Audit log
   await logAdminAction({
-    action: 'deleteEmployer',
+    action: 'deleteEmployerProfile',
     performedBy: req.user._id,
-    targetType: 'Employer',
+    targetType: 'EmployerProfile',
     targetId: employerId,
     details: { email: employer.email, company: employer.company }
   });
 
-  res.json({ success: true, message: 'Employer deleted successfully' });
+  res.json({ success: true, message: 'EmployerProfile deleted successfully' });
 });
 
 /**
@@ -371,17 +371,17 @@ const deleteEmployer = asyncHandler(async (req, res) => {
  * @route POST /api/admin/employers/:employerId/upload-logo
  * @access Private (Admin Only)
  */
-const uploadEmployerLogo = asyncHandler(async (req, res) => {
+const uploadEmployerProfileLogo = asyncHandler(async (req, res) => {
   const { employerId } = req.params;
 
   if (!req.file) {
     return res.status(400).json({ success: false, error: 'No file uploaded. Please select a logo image.' });
   }
 
-  const employer = await Employer.findById(employerId);
+  const employer = await EmployerProfile.findById(employerId);
 
   if (!employer) {
-    return res.status(404).json({ success: false, error: 'Employer not found.' });
+    return res.status(404).json({ success: false, error: 'EmployerProfile not found.' });
   }
 
   // Delete old logo if exists
@@ -538,7 +538,7 @@ const getAllApplications = asyncHandler(async (req, res) => {
 const getDashboardStats = asyncHandler(async (req, res) => {
   // Get total counts
   const totalUsers = await User.countDocuments();
-  const totalEmployers = await Employer.countDocuments();
+  const totalEmployerProfiles = await EmployerProfile.countDocuments();
   const totalJobs = await Job.countDocuments({ isActive: true, applicationDeadline: { $gte: new Date() } }); // Only active, non-expired jobs
   const totalApplications = await Application.countDocuments();
 
@@ -548,7 +548,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     .sort({ createdAt: -1 })
     .limit(5);
 
-  const recentEmployers = await Employer.find()
+  const recentEmployerProfiles = await EmployerProfile.find()
     .select('companyName email createdAt')
     .sort({ createdAt: -1 })
     .limit(5);
@@ -600,13 +600,13 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     data: {
       stats: {
         totalUsers,
-        totalEmployers,
+        totalEmployerProfiles,
         totalJobs,
         totalApplications
       },
       statusCounts,
       recentUsers,
-      recentEmployers, 
+      recentEmployerProfiles, 
       recentJobs,
       recentApplications
     }
@@ -697,11 +697,11 @@ module.exports = {
   getUserById,
   updateUser,
   deleteUser,
-  getAllEmployers,
-  getEmployerById,
-  updateEmployer,
-  deleteEmployer,
-  uploadEmployerLogo, 
+  getAllEmployerProfiles,
+  getEmployerProfileById,
+  updateEmployerProfile,
+  deleteEmployerProfile,
+  uploadEmployerProfileLogo, 
   getAllJobs, 
   getAllApplications,
   getDashboardStats,

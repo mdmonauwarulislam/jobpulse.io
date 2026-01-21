@@ -37,27 +37,20 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  // Add useEffect to redirect if profile is incomplete
-  useEffect(() => {
-    if (!loading && user && !user.isProfileComplete) {
-      if (userType === 'employer') {
-        if (router.pathname !== '/employer/complete-profile') {
-          router.replace('/employer/complete-profile');
-        }
-      } else if (userType === 'user') {
-        if (router.pathname !== '/user/complete-profile') {
-          router.replace('/user/complete-profile');
-        }
-      }
-    }
-  }, [loading, user, userType, router]);
+  // DISABLED: Redirect logic moved to individual pages and withAuth HOC
+  // This prevents redirect loops by having each route handle its own redirects
+  // The AuthContext only manages user state, not redirects
+  // Pages using withAuth HOC handle redirects for protected routes
+  // Complete-profile pages handle their own redirects
 
   const fetchUser = async (savedUserType) => {
     try {
       const response = await api.get('/auth/me');
       // Support both user and employer objects from backend
-      const userObj = response.data.data.user || response.data.data.employer;
-      setUser({ ...userObj, profileCompletion: response.data.data.profileCompletion });
+      // Support both user (legacy), candidate, and employer objects
+      const userObj = response.data.data.user || response.data.data.candidate || response.data.data.employer;
+      const profileObj = response.data.data.profile || {};
+      setUser({ ...userObj, ...profileObj, profileCompletion: response.data.data.profileCompletion });
       // Prefer userType from cookie, else infer from user data
       if (savedUserType) {
         setUserType(savedUserType);
@@ -72,40 +65,72 @@ export function AuthProvider({ children }) {
       }
     } catch (error) {
       console.error('Error fetching user:', error);
-      logout();
+      // Only logout on 401 (unauthorized), not on 403 (forbidden/not verified)
+      // 403 means user is authenticated but not verified, which is handled by redirect logic
+      if (error.response?.status === 401) {
+        logout();
+      } else {
+        // For other errors (like 403), still set loading to false so UI can render
+        setLoading(false);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const login = async (email, password, type = 'user') => {
+  const login = async (email, password) => {
     try {
-      const endpoint = type === 'employer' ? '/auth/login-employer' : 
-                      type === 'admin' ? '/auth/login-admin' : '/auth/login-user';
-      const response = await api.post(endpoint, { email, password });
-      const { token, user: userData, employer } = response.data.data;
+      // Unified login endpoint
+      const response = await api.post('/auth/login', { email, password });
+
+      // The backend returns { data: { [role]: userObj, token } }
+      // We need to find the user object key (candidate, employer, admin, or user)
+      const data = response.data.data;
+      const token = data.token;
+
+      // Determine user object and role
+      let userObj = null;
+      let role = null;
+
+      if (data.candidate) {
+        userObj = data.candidate;
+        role = 'user'; // Frontend uses 'user' for candidate
+      } else if (data.employer) {
+        userObj = data.employer;
+        role = 'employer';
+      } else if (data.user && data.user.role === 'admin') {
+        userObj = data.user;
+        role = 'admin';
+      } else if (data.user) {
+        // Fallback for generic user key
+        userObj = data.user;
+        role = userObj.role === 'candidate' ? 'user' : userObj.role;
+      }
+
+      if (!userObj || !role) {
+        throw new Error('Invalid response from server');
+      }
+
       // Set token and userType in cookies, localStorage, and headers
       Cookies.set('token', token, { expires: 30 });
-      Cookies.set('userType', type, { expires: 30 });
+      Cookies.set('userType', role, { expires: 30 });
       if (typeof window !== 'undefined') {
-        window.localStorage.setItem('userType', type);
+        window.localStorage.setItem('userType', role);
         window.localStorage.setItem('token', token);
       }
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setUserType(type);
-      // Set user state directly from login response for immediate access
-      if (type === 'employer' && employer) {
-        setUser({ ...employer });
-      } else if (userData) {
-        setUser({ ...userData });
-      }
-      // Always fetch fresh user data from backend after login
-      await fetchUser(type);
+      setUserType(role);
+      setUser(userObj);
+
+      // Always fetch fresh user data from backend after login to ensure full profile sync
+      await fetchUser(role);
+
       toast.success('Login successful!');
-      // Redirect based on user type
-      if (type === 'admin') {
+
+      // Redirect based on detected role
+      if (role === 'admin') {
         router.push('/admin/dashboard');
-      } else if (type === 'employer') {
+      } else if (role === 'employer') {
         router.push('/employer/dashboard');
       } else {
         router.push('/user/dashboard');
@@ -123,27 +148,27 @@ export function AuthProvider({ children }) {
     try {
       const endpoint = type === 'employer' ? '/auth/register-employer' : '/auth/register-user';
       const response = await api.post(endpoint, userData);
-      const { token, user: userInfo, employer } = response.data.data;
-      
+      const { token, user: userInfo, candidate, employer } = response.data.data;
+
       // Set token and userType in cookies and headers
       Cookies.set('token', token, { expires: 30 });
       Cookies.set('userType', type, { expires: 30 });
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
+
       // Set user data
-      const user = userInfo || employer;
+      const user = userInfo || candidate || employer;
       setUser(user);
       setUserType(type);
-      
+
       toast.success('Registration successful! Please check your email to verify your account.');
-      
+
       // Redirect based on user type
       if (type === 'employer') {
         router.push('/employer/dashboard');
       } else {
         router.push('/user/dashboard');
       }
-      
+
       return { success: true };
     } catch (error) {
       console.error('Registration error:', error);
@@ -153,7 +178,15 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      // Call backend to clear httpOnly cookie
+      await api.post('/auth/logout');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Continue with client cleanup even if backend fails
+    }
+
     // Remove token and userType from cookies, localStorage, and headers
     Cookies.remove('token');
     Cookies.remove('userType');
@@ -162,14 +195,14 @@ export function AuthProvider({ children }) {
       window.localStorage.removeItem('token');
     }
     delete api.defaults.headers.common['Authorization'];
-    
+
     // Clear user state
     setUser(null);
     setUserType(null);
-    
+
     // Redirect to home
     router.push('/');
-    
+
     toast.success('Logged out successfully');
   };
 
@@ -186,7 +219,7 @@ export function AuthProvider({ children }) {
   };
 
   const isAdmin = () => {
-    return userType === 'user' && user?.role === 'admin';
+    return userType === 'admin' || (user?.role === 'admin');
   };
 
   const isJobSeeker = () => {

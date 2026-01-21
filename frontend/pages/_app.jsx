@@ -19,6 +19,7 @@ const queryClient = new QueryClient({
 function MyApp({ Component, pageProps }) {
   const router = useRouter();
   const isAdminRoute = router.pathname.startsWith('/admin');
+  const isEmployerRoute = router.pathname.startsWith('/employer');
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -51,6 +52,8 @@ function MyApp({ Component, pageProps }) {
                 }}
               />
             </>
+          ) : isEmployerRoute ? (
+             <Component {...pageProps} />
           ) : (
             <Layout>
               <Component {...pageProps} />

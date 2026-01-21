@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
@@ -6,441 +6,246 @@ import {
   FaUser, 
   FaBell, 
   FaShieldAlt, 
-  FaPalette, 
   FaEnvelope,
   FaSave,
   FaEye,
-  FaEyeSlash
+  FaEyeSlash,
+  FaBuilding,
+  FaMapMarkerAlt,
+  FaPhone,
+  FaGlobe,
+  FaFileAlt
 } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
 import { api } from '../utils/api';
 
-export default function Settings() {
+export default function Settings({ isEmbedded = false }) {
   const { user, updateUser } = useAuth();
-  const { darkMode, toggleTheme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
-  const [activeTab, setActiveTab] = useState('profile');
+  // Default to 'security' for everyone now
+  const [activeTab, setActiveTab] = useState('security');
 
-  const [profileData, setProfileData] = useState({
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    location: user?.location || ''
-  });
-
+  // Initialize form data based on user role
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
-
   const [notificationSettings, setNotificationSettings] = useState({
-    emailNotifications: true,
-    jobAlerts: true,
-    applicationUpdates: true,
-    marketingEmails: false,
-    weeklyDigest: true
+    emailAlerts: true,
+    jobRecommendations: true,
+    securityAlerts: true
   });
 
-  const tabs = [
-    { id: 'profile', label: 'Profile', icon: FaUser },
-    { id: 'security', label: 'Security', icon: FaShieldAlt },
-    { id: 'notifications', label: 'Notifications', icon: FaBell },
-    { id: 'appearance', label: 'Appearance', icon: FaPalette }
-  ];
-
-  const handleProfileUpdate = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    try {
-      const response = await api.put('/users/profile', profileData);
-      
-      if (response.data.success) {
-        updateUser(response.data.data.user);
-        toast.success('Profile updated successfully!');
-      }
-    } catch (error) {
-      toast.error('Failed to update profile');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Profile data state removed as it is no longer used here
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
-    
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error('New passwords do not match');
-      return;
+      return toast.error('Passwords do not match');
     }
-
-    if (passwordData.newPassword.length < 8) {
-      toast.error('Password must be at least 8 characters long');
-      return;
-    }
-
     setLoading(true);
-    
     try {
-      const response = await api.put('/users/change-password', {
+      await api.put('/auth/update-password', {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword
       });
-      
-      if (response.data.success) {
-        toast.success('Password changed successfully!');
-        setPasswordData({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: ''
-        });
-      }
+      toast.success('Password updated successfully');
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error) {
-      const message = error.response?.data?.message || 'Failed to change password';
-      toast.error(message);
+      toast.error(error.response?.data?.message || 'Failed to update password');
     } finally {
       setLoading(false);
     }
   };
 
   const handleNotificationUpdate = async () => {
-    try {
-      const response = await api.put('/users/notifications', notificationSettings);
-      
-      if (response.data.success) {
-        toast.success('Notification settings updated!');
-      }
-    } catch (error) {
-      toast.error('Failed to update notification settings');
-    }
+    // Mock implementation
+    toast.success('Notification preferences saved');
   };
+
+  // Tab Button Component for consistent styling
+  const TabButton = ({ id, label, icon: Icon }) => (
+    <button
+      onClick={() => setActiveTab(id)}
+      className={`flex items-center px-6 py-4 border-b-2 transition-all font-medium whitespace-nowrap ${
+        activeTab === id
+          ? 'border-orange-500 text-orange-500'
+          : 'border-transparent text-gray-400 hover:text-white hover:border-gray-700'
+      }`}
+    >
+      <Icon className={`mr-2 ${activeTab === id ? 'text-orange-500' : 'text-gray-500'}`} />
+      {label}
+    </button>
+  );
 
   return (
     <>
       <Head>
-        <title>Settings - JobPulse</title>
-        <meta name="description" content="Manage your account settings and preferences" />
+        <title>Settings | JobPulse</title>
       </Head>
 
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="container-custom py-8">
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mb-8"
-          >
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Account Settings
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Manage your profile, security, and preferences
-            </p>
-          </motion.div>
-
-          <div className="grid lg:grid-cols-4 gap-8">
-            {/* Sidebar */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="lg:col-span-1"
+      {/* Adjusted container: full width and no padding if embedded */}
+      <div className={`min-h-screen ${isEmbedded ? 'w-full' : 'bg-black pt-20 pb-12 px-4 sm:px-6 lg:px-8'}`}>
+        <div className={`${isEmbedded ? 'w-full' : 'max-w-4xl mx-auto'}`}>
+          {!isEmbedded && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8"
             >
-              <div className="card">
-                <div className="card-body p-6">
-                  <nav className="space-y-2">
-                    {tabs.map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center w-full px-4 py-3 text-left rounded-lg transition-colors ${
-                          activeTab === tab.id
-                            ? 'bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300'
-                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                        }`}
-                      >
-                        <tab.icon className="mr-3" />
-                        {tab.label}
-                      </button>
-                    ))}
-                  </nav>
-                </div>
-              </div>
+              <h1 className="text-3xl font-bold text-white mb-2">Settings</h1>
+              <p className="text-gray-400">Manage your account preferences</p>
             </motion.div>
+          )}
 
-            {/* Main Content */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="lg:col-span-3"
+          {isEmbedded && (
+             <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
+                <p className="text-gray-600 dark:text-gray-400">Manage your account preferences</p>
+             </div>
+          )}
+
+          <div className="flex flex-col gap-6">
+            {/* Horizontal Tabs Navigation */}
+            <div className="border-b border-gray-800 overflow-x-auto no-scrollbar">
+              <nav className="flex space-x-1" aria-label="Tabs">
+                <TabButton id="security" label="Security" icon={FaShieldAlt} />
+                <TabButton id="notifications" label="Notifications" icon={FaBell} />
+              </nav>
+            </div>
+
+            {/* Main Content Area */}
+            <motion.div 
+              key={activeTab}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="flex-1 min-h-[500px]"
             >
-              {/* Profile Settings */}
-              {activeTab === 'profile' && (
-                <div className="card">
-                  <div className="card-body p-8">
-                    <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
-                      <FaUser className="mr-3 text-primary-500" />
-                      Profile Information
-                    </h2>
 
-                    <form onSubmit={handleProfileUpdate} className="space-y-6">
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            First Name
-                          </label>
-                          <input
-                            type="text"
-                            value={profileData.firstName}
-                            onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
-                            className="input-field"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Last Name
-                          </label>
-                          <input
-                            type="text"
-                            value={profileData.lastName}
-                            onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
-                            className="input-field"
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Email Address
-                        </label>
-                        <input
-                          type="email"
-                          value={profileData.email}
-                          onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                          className="input-field"
-                          required
-                        />
-                      </div>
-
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Phone Number
-                          </label>
-                          <input
-                            type="tel"
-                            value={profileData.phone}
-                            onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                            className="input-field"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Location
-                          </label>
-                          <input
-                            type="text"
-                            value={profileData.location}
-                            onChange={(e) => setProfileData({ ...profileData, location: e.target.value })}
-                            className="input-field"
-                            placeholder="City, Country"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex justify-end">
-                        <button
-                          type="submit"
-                          disabled={loading}
-                          className="btn-primary flex items-center"
-                        >
-                          {loading ? (
-                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                          ) : (
-                            <FaSave className="mr-2" />
-                          )}
-                          {loading ? 'Saving...' : 'Save Changes'}
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              )}
 
               {/* Security Settings */}
               {activeTab === 'security' && (
-                <div className="card">
-                  <div className="card-body p-8">
-                    <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
-                      <FaShieldAlt className="mr-3 text-primary-500" />
-                      Security Settings
-                    </h2>
+                <div className="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-6 sm:p-8 border border-white/10">
+                  <h2 className="text-xl font-semibold text-white mb-6 flex items-center">
+                    <FaShieldAlt className="mr-3 text-orange-500" />
+                    Security Settings
+                  </h2>
 
-                    <form onSubmit={handlePasswordChange} className="space-y-6">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Current Password
-                        </label>
-                        <div className="relative">
-                          <input
-                            type={showPassword ? 'text' : 'password'}
-                            value={passwordData.currentPassword}
-                            onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                            className="input-field pr-10"
-                            required
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                          >
-                            {showPassword ? <FaEyeSlash className="text-gray-400" /> : <FaEye className="text-gray-400" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          New Password
-                        </label>
-                        <div className="relative">
-                          <input
-                            type={showNewPassword ? 'text' : 'password'}
-                            value={passwordData.newPassword}
-                            onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                            className="input-field pr-10"
-                            required
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowNewPassword(!showNewPassword)}
-                            className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                          >
-                            {showNewPassword ? <FaEyeSlash className="text-gray-400" /> : <FaEye className="text-gray-400" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Confirm New Password
-                        </label>
+                  <form onSubmit={handlePasswordChange} className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Current Password
+                      </label>
+                      <div className="relative">
                         <input
-                          type="password"
-                          value={passwordData.confirmPassword}
-                          onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                          className="input-field"
+                          type={showPassword ? 'text' : 'password'}
+                          value={passwordData.currentPassword}
+                          onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                          className="w-full pl-4 pr-12 py-3 rounded-xl bg-gray-900 border border-gray-700 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all text-white"
                           required
                         />
-                      </div>
-
-                      <div className="flex justify-end">
                         <button
-                          type="submit"
-                          disabled={loading}
-                          className="btn-primary flex items-center"
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute inset-y-0 right-0 pr-4 flex items-center"
                         >
-                          {loading ? (
-                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                          ) : (
-                            <FaSave className="mr-2" />
-                          )}
-                          {loading ? 'Changing...' : 'Change Password'}
+                          {showPassword ? <FaEyeSlash className="text-gray-400 hover:text-gray-600" /> : <FaEye className="text-gray-400 hover:text-gray-600" />}
                         </button>
                       </div>
-                    </form>
-                  </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        New Password
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showNewPassword ? 'text' : 'password'}
+                          value={passwordData.newPassword}
+                          onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                          className="w-full pl-4 pr-12 py-3 rounded-xl bg-gray-900 border border-gray-700 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all text-white"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                          className="absolute inset-y-0 right-0 pr-4 flex items-center"
+                        >
+                          {showNewPassword ? <FaEyeSlash className="text-gray-400 hover:text-gray-600" /> : <FaEye className="text-gray-400 hover:text-gray-600" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Confirm New Password
+                      </label>
+                      <input
+                        type="password"
+                        value={passwordData.confirmPassword}
+                        onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl bg-gray-900 border border-gray-700 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all text-white"
+                        required
+                      />
+                    </div>
+
+                    <div className="flex justify-end pt-4">
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="px-8 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-xl shadow-lg hover:shadow-orange-500/20 transition-all flex items-center disabled:opacity-70"
+                      >
+                         {loading ? (
+                          <span className="flex items-center"><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div> Changing...</span>
+                        ) : (
+                          <span className="flex items-center"><FaSave className="mr-2" /> Change Password</span>
+                        )}
+                      </button>
+                    </div>
+                  </form>
                 </div>
               )}
 
               {/* Notification Settings */}
               {activeTab === 'notifications' && (
-                <div className="card">
-                  <div className="card-body p-8">
-                    <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
-                      <FaBell className="mr-3 text-primary-500" />
-                      Notification Preferences
-                    </h2>
+                <div className="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-6 sm:p-8 border border-white/10">
+                  <h2 className="text-xl font-semibold text-white mb-6 flex items-center">
+                    <FaBell className="mr-3 text-orange-500" />
+                    Notification Preferences
+                  </h2>
 
-                    <div className="space-y-6">
-                      <div className="space-y-4">
-                        {Object.entries(notificationSettings).map(([key, value]) => (
-                          <div key={key} className="flex items-center justify-between">
-                            <div>
-                              <h3 className="font-medium text-gray-900 dark:text-white">
-                                {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                              </h3>
-                              <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Receive notifications for {key.replace(/([A-Z])/g, ' $1').toLowerCase()}
-                              </p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={value}
-                                onChange={(e) => {
-                                  setNotificationSettings({
-                                    ...notificationSettings,
-                                    [key]: e.target.checked
-                                  });
-                                  handleNotificationUpdate();
-                                }}
-                                className="sr-only peer"
-                              />
-                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Appearance Settings */}
-              {activeTab === 'appearance' && (
-                <div className="card">
-                  <div className="card-body p-8">
-                    <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
-                      <FaPalette className="mr-3 text-primary-500" />
-                      Appearance Settings
-                    </h2>
-
-                    <div className="space-y-6">
-                      <div className="flex items-center justify-between">
+                  <div className="space-y-6">
+                    {Object.entries(notificationSettings).map(([key, value]) => (
+                      <div key={key} className="flex items-center justify-between p-4 bg-gray-900 rounded-xl">
                         <div>
-                          <h3 className="font-medium text-gray-900 dark:text-white">Dark Mode</h3>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Switch between light and dark themes
+                          <h3 className="font-medium text-white">
+                            {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                          </h3>
+                          <p className="text-sm text-gray-400">
+                            Receive notifications for {key.replace(/([A-Z])/g, ' $1').toLowerCase()}
                           </p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
                           <input
                             type="checkbox"
-                            checked={darkMode}
-                            onChange={toggleTheme}
+                            checked={value}
+                            onChange={(e) => {
+                              setNotificationSettings({
+                                ...notificationSettings,
+                                [key]: e.target.checked
+                              });
+                              handleNotificationUpdate();
+                            }}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+                          <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border-gray-600 peer-checked:bg-orange-500"></div>
                         </label>
                       </div>
-
-                      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                        <h4 className="font-medium text-gray-900 dark:text-white mb-2">Theme Preview</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Current theme: {darkMode ? 'Dark Mode' : 'Light Mode'}
-                        </p>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -450,4 +255,4 @@ export default function Settings() {
       </div>
     </>
   );
-} 
+}

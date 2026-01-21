@@ -35,16 +35,28 @@ api.interceptors.response.use(
     const isAuthEndpoint = error.config?.url?.includes('/auth/login') || 
                            error.config?.url?.includes('/auth/register') ||
                            error.config?.url?.includes('/auth/forgot-password') ||
-                           error.config?.url?.includes('/auth/reset-password');
+                           error.config?.url?.includes('/auth/reset-password') ||
+                           error.config?.url?.includes('/auth/verify') ||
+                           error.config?.url?.includes('/auth/me');
     
+    // Handle 401 (Unauthorized) - user is not authenticated
     if (error.response?.status === 401 && !isAuthEndpoint) {
       // Clear token and redirect to login only for protected routes
       Cookies.remove('token');
       Cookies.remove('userType');
       if (typeof window !== 'undefined') {
-        window.location.href = '/auth/login';
+        window.localStorage.removeItem('token');
+        window.localStorage.removeItem('userType');
+        // Only redirect if not already on login/register pages
+        if (!window.location.pathname.includes('/auth/')) {
+          window.location.href = '/auth/login';
+        }
       }
     }
+    
+    // Handle 403 (Forbidden) - user is authenticated but not verified or lacks permissions
+    // Don't redirect automatically for 403, let the component handle it
+    // This prevents infinite redirect loops when user is not verified
     
     // Handle other errors
     if (error.response?.data?.error) {

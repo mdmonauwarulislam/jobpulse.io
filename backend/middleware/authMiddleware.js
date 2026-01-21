@@ -1,17 +1,17 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User'); // Ensure correct path to your User model
-const Employer = require('../models/Employer'); // Ensure correct path to your Employer model
+const User = require('../models/User');
+const EmployerProfile = require('../models/EmployerProfile');
+const CandidateProfile = require('../models/CandidateProfile');
+const AdminProfile = require('../models/AdminProfile');
 
 /**
  * Protect middleware: Authenticates a user based on JWT.
- * It fetches the user/employer document and attaches it to `req.user`,
- * and sets `req.userType` ('user' or 'employer').
- * This is the primary authentication middleware for protected routes.
+ * It fetches the user document and attaches it to `req.user`.
+ * It also fetches the profile and attaches it to `req.profile`.
  */
 const protect = async (req, res, next) => {
   let token;
 
-  // 1. Get token from headers, cookies, or query parameters
   if (req.header('Authorization')?.startsWith('Bearer')) {
     token = req.header('Authorization').replace('Bearer ', '');
   } else if (req.cookies?.token) {
@@ -20,32 +20,34 @@ const protect = async (req, res, next) => {
     token = req.query.token;
   }
 
-  // 2. Check if token exists
   if (!token) {
     return res.status(401).json({ success: false, error: 'Access denied. No token provided.' });
   }
 
   try {
-    // 3. Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // 4. Fetch user/employer based on the role in the token
-    let entity;
-    if (decoded.role === 'employer') {
-      entity = await Employer.findById(decoded.id).select('+password'); 
-      if (!entity) {
-        return res.status(401).json({ success: false, error: 'Employer not found.' });
-      }
-      req.user = entity;
-      req.userType = 'employer';
-    } else { // Assuming 'user' role for job seekers and admins
-      entity = await User.findById(decoded.id).select('+password'); 
-      if (!entity) {
-        return res.status(401).json({ success: false, error: 'User (job seeker/admin) not found.' });
-      }
-      req.user = entity;
-      req.userType = 'user'; 
+    
+    // Find User by public userId from token
+    const user = await User.findOne({ userId: decoded.userId }).select('+password');
+    
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'User not found.' });
     }
+
+    req.user = user;
+    req.userType = user.role; // 'employer', 'candidate', or 'admin'
+
+    // Fetch Profile based on role
+    let profile = null;
+    if (user.role === 'employer') {
+      profile = await EmployerProfile.findOne({ user: user._id });
+    } else if (user.role === 'candidate') {
+      profile = await CandidateProfile.findOne({ user: user._id });
+    } else if (user.role === 'admin') {
+      profile = await AdminProfile.findOne({ user: user._id });
+    }
+    
+    req.profile = profile;
     
     next(); 
 
@@ -57,10 +59,9 @@ const protect = async (req, res, next) => {
 
 /**
  * Middleware to ensure the user's account is verified.
- * Assumes `protect` middleware has already run and `req.user` is available.
  */
 const requireVerification = (req, res, next) => {
-  if (!req.user.isVerified) {
+  if (req.user && !req.user.isVerified) {
     return res.status(403).json({ 
       success: false,
       error: 'Account not verified. Please check your email and verify your account to proceed.' 
@@ -71,10 +72,9 @@ const requireVerification = (req, res, next) => {
 
 /**
  * Middleware to restrict access to admin users.
- * Assumes `protect` middleware has already run and `req.user` is available.
  */
 const requireAdmin = (req, res, next) => {
-  if (req.userType !== 'user' || req.user.role !== 'admin') {
+  if (req.user.role !== 'admin') {
     return res.status(403).json({ 
       success: false,
       error: 'Access denied. Admin privileges required.' 
@@ -85,10 +85,9 @@ const requireAdmin = (req, res, next) => {
 
 /**
  * Middleware to restrict access to employer accounts.
- * Assumes `protect` middleware has already run and `req.user` and `req.userType` are available.
  */
 const requireEmployer = (req, res, next) => {
-  if (req.userType !== 'employer') {
+  if (req.user.role !== 'employer') {
     return res.status(403).json({ 
       success: false,
       error: 'Access denied. Employer account required.' 
@@ -104,20 +103,19 @@ const requireEmployer = (req, res, next) => {
 };
 
 /**
- * Middleware to restrict access to job seeker accounts (non-admin users).
- * Assumes `protect` middleware has already run and `req.user` and `req.userType` are available.
+ * Middleware to restrict access to candidate (job seeker) accounts.
  */
 const requireJobSeeker = (req, res, next) => {
-  if (req.userType !== 'user' || req.user.role === 'admin') {
+  if (req.user.role !== 'candidate') {
     return res.status(403).json({ 
       success: false,
-      error: 'Access denied. Job seeker privileges required.' 
+      error: 'Access denied. Candidate privileges required.' 
     });
   }
   if (!req.user.isVerified) {
     return res.status(403).json({ 
       success: false,
-      error: 'Job seeker account not verified. Please verify your email.' 
+      error: 'Candidate account not verified. Please verify your email.' 
     });
   }
   next();
@@ -126,9 +124,6 @@ const requireJobSeeker = (req, res, next) => {
 
 /**
  * Optional authentication middleware.
- * If a token is present and valid, it attaches `req.user` and `req.userType`.
- * If no token or an invalid token, it simply calls `next()` without error,
- * allowing public routes to still function.
  */
 const optionalAuth = async (req, res, next) => {
   let token;
@@ -143,18 +138,18 @@ const optionalAuth = async (req, res, next) => {
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      let entity;
-      if (decoded.role === 'employer') {
-        entity = await Employer.findById(decoded.id);
-        if (entity && entity.isVerified) { 
-          req.user = entity;
-          req.userType = 'employer';
-        }
-      } else {
-        entity = await User.findById(decoded.id);
-        if (entity && entity.isVerified) { 
-          req.user = entity;
-          req.userType = 'user';
+      const user = await User.findOne({ userId: decoded.userId });
+      
+      if (user) {
+        req.user = user;
+        req.userType = user.role;
+        
+        if (user.role === 'employer') {
+          req.profile = await EmployerProfile.findOne({ user: user._id });
+        } else if (user.role === 'candidate') {
+          req.profile = await CandidateProfile.findOne({ user: user._id });
+        } else if (user.role === 'admin') {
+          req.profile = await AdminProfile.findOne({ user: user._id });
         }
       }
     } catch (error) {

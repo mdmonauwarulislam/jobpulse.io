@@ -13,7 +13,6 @@ const applicationSchema = new mongoose.Schema({
   },
   coverLetter: {
     type: String,
-    required: [true, 'Cover letter is required'],
     trim: true,
     maxlength: [2000, 'Cover letter cannot exceed 2000 characters']
   },

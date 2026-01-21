@@ -43,7 +43,7 @@ export default function JobCard({ job, onApply, viewMode = 'grid' }) {
     return badges[jobType] || 'bg-gray-500/20 text-gray-300 border-gray-500/30';
   };
 
-  const formatSalary = (salary, salaryType = 'yearly') => {
+  const formatSalary = (salary, salaryType = 'Annual') => {
     if (!salary) return 'Not specified';
     
     const formatter = new Intl.NumberFormat('en-US', {
@@ -54,10 +54,16 @@ export default function JobCard({ job, onApply, viewMode = 'grid' }) {
     });
 
     const formatted = formatter.format(salary);
-    const type = salaryType === 'yearly' ? '/year' : 
-                 salaryType === 'monthly' ? '/month' : '/hour';
+    const lowerType = String(salaryType).toLowerCase();
+
+    let suffix = ' Annually';
+    if (lowerType.includes('month')) {
+      suffix = ' Monthly';
+    } else if (lowerType.includes('hour')) {
+      suffix = ' Hourly';
+    }
     
-    return `${formatted}${type}`;
+    return `${formatted}${suffix}`;
   };
 
   const getExperienceLevel = (level) => {
@@ -99,7 +105,7 @@ export default function JobCard({ job, onApply, viewMode = 'grid' }) {
                 </h3>
                 <div className="flex items-center text-gray-300 mb-3">
                   <FaBuilding className="w-4 h-4 mr-2" />
-                  <span className="text-sm">{job.company}</span>
+                  <span className="text-sm">{job.employer?.company || job.company}</span>
                 </div>
               </div>
               <div className={`px-3 py-1 rounded-full text-xs font-medium border ${getJobTypeBadge(job.jobType)}`}>
@@ -123,27 +129,12 @@ export default function JobCard({ job, onApply, viewMode = 'grid' }) {
               )}
 
               <div className="flex items-center text-gray-300">
-                {React.createElement(getExperienceIcon(job.experienceLevel), { className: "w-4 h-4 mr-2 flex-shrink-0" })}
-                <span className="text-sm">
-                  {getExperienceLevel(job.experienceLevel)}
-                </span>
-              </div>
-
-              <div className="flex items-center text-gray-300">
                 <FaCalendarAlt className="w-4 h-4 mr-2 flex-shrink-0" />
                 <span className="text-sm">
                   {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true })}
                 </span>
               </div>
             </div>
-
-            {/* Description Preview */}
-            <p className="text-gray-300 text-sm mb-4 line-clamp-2">
-              {job.description.length > 200 
-                ? `${job.description.substring(0, 200)}...` 
-                : job.description
-              }
-            </p>
 
             {/* Tags */}
             {job.tags && job.tags.length > 0 && (
@@ -216,7 +207,7 @@ export default function JobCard({ job, onApply, viewMode = 'grid' }) {
               </h3>
               <div className="flex items-center text-gray-300 mb-2">
                 <FaBuilding className="w-4 h-4 mr-2" />
-                <span className="text-sm">{job.company}</span>
+                <span className="text-sm">{job.employer?.company || job.company}</span>
               </div>
             </div>
             <div className={`px-3 py-1 rounded-full text-xs font-medium border ${getJobTypeBadge(job.jobType)}`}>
@@ -248,13 +239,13 @@ export default function JobCard({ job, onApply, viewMode = 'grid' }) {
             </div>
           </div>
 
-          {/* Description Preview */}
-          <p className="text-gray-300 text-sm mb-4 line-clamp-2">
+          {/* Description Preview - REMOVED */}
+          {/* <p className="text-gray-300 text-sm mb-4 line-clamp-2">
             {job.description.length > 150 
               ? `${job.description.substring(0, 150)}...` 
               : job.description
             }
-          </p>
+          </p> */}
 
           {/* Tags */}
           {job.tags && job.tags.length > 0 && (

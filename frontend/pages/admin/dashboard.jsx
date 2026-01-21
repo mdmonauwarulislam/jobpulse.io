@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
@@ -11,8 +11,12 @@ import {
 } from 'react-icons/fa';
 import { api } from '../../utils/api';
 import AdminLayout from '../../components/admin/AdminLayout';
+import { useAuth } from '../../contexts/AuthContext';
+import { withAuth } from '../../utils/withAuth';
+import VerifyEmailGate from '../../components/VerifyEmailGate';
 
-export default function AdminDashboard() {
+function AdminDashboard() {
+  const { user, userType, loading: authLoading } = useAuth();
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalEmployers: 0,
@@ -24,36 +28,53 @@ export default function AdminDashboard() {
   const [recentUsers, setRecentUsers] = useState([]);
   const [recentJobs, setRecentJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const hasFetchedRef = useRef(false);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    // Prevent fetching if user is not verified or not admin
+    if (authLoading) return;
+    
+    // Prevent multiple fetches
+    if (hasFetchedRef.current) return;
+    
+    // VerifyEmailGate handles verification
+    if (user && userType === 'admin') {
+      hasFetchedRef.current = true;
+      
+      const fetchDashboardData = async () => {
+        try {
+          const [statsRes, usersRes, jobsRes] = await Promise.all([
+            api.get('/admin/dashboard'),
+            api.get('/admin/users?limit=5'),
+            api.get('/admin/jobs?limit=5')
+          ]);
 
-  const fetchDashboardData = async () => {
-    try {
-      const [statsRes, usersRes, jobsRes] = await Promise.all([
-        api.get('/admin/dashboard'),
-        api.get('/admin/users?limit=5'),
-        api.get('/admin/jobs?limit=5')
-      ]);
-
-      setStats(statsRes.data.data.stats || {
-        totalUsers: 0,
-        totalEmployers: 0,
-        totalJobs: 0,
-        totalApplications: 0,
-        pendingJobs: 0,
-        pendingApplications: 0
-      });
-      setRecentUsers(usersRes.data.data.users || []);
-      setRecentJobs(jobsRes.data.data.jobs || []);
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to load dashboard data');
-    } finally {
-      setLoading(false);
+          setStats(statsRes.data.data.stats || {
+            totalUsers: 0,
+            totalEmployers: 0,
+            totalJobs: 0,
+            totalApplications: 0,
+            pendingJobs: 0,
+            pendingApplications: 0
+          });
+          setRecentUsers(usersRes.data.data.users || []);
+          setRecentJobs(jobsRes.data.data.jobs || []);
+        } catch (error) {
+          console.error(error);
+          // Handle 403 (forbidden) errors gracefully
+          if (error.response?.status === 403) {
+            toast.error('Please verify your email to access the dashboard');
+          } else {
+            toast.error('Failed to load dashboard data');
+          }
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      fetchDashboardData();
     }
-  };
+  }, [user, userType, authLoading]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -85,7 +106,8 @@ export default function AdminDashboard() {
   }
 
   return (
-    <AdminLayout title="Overview">
+    <VerifyEmailGate>
+      <AdminLayout title="Overview">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">
           Dashboard Overview
@@ -190,6 +212,13 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
-    </AdminLayout>
+      </AdminLayout>
+    </VerifyEmailGate>
   );
 }
+
+// Protect this route - require admin authentication
+export default withAuth(AdminDashboard, {
+  requiredUserType: 'admin',
+  redirectTo: '/auth/login'
+});
