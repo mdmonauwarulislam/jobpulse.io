@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { 
-  FaClipboardList, 
-  FaFilter, 
-  FaUserShield, 
+import {
+  FaClipboardList,
+  FaFilter,
+  FaUserShield,
   FaClock
 } from 'react-icons/fa';
 import { api } from '../../utils/api';
-import AdminLayout from '../../components/admin/AdminLayout';
+import { useRouter } from 'next/router';
+import Head from 'next/head';
+import DashboardLayout from '../../components/DashboardLayout';
 
 export default function AuditLogs() {
   const [logs, setLogs] = useState([]);
@@ -30,7 +32,7 @@ export default function AuditLogs() {
         ...(actionFilter && { action: actionFilter }),
         ...(typeFilter && { targetType: typeFilter })
       });
-      
+
       const response = await api.get(`/admin/audit-logs?${params}`);
       setLogs(response.data.data.logs || []);
       setPagination(response.data.data.pagination || {});
@@ -46,7 +48,10 @@ export default function AuditLogs() {
   };
 
   return (
-    <AdminLayout title="Audit Logs">
+    <DashboardLayout>
+      <Head>
+        <title>Audit Logs - JobPulse Admin</title>
+      </Head>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">Audit Logs</h1>
         <p className="text-gray-400">Track all administrative actions and system events.</p>
@@ -179,6 +184,6 @@ export default function AuditLogs() {
           </div>
         )}
       </div>
-    </AdminLayout>
+    </DashboardLayout>
   );
 }

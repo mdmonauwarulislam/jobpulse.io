@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { toast } from 'react-hot-toast';
-import { 
-  FaBuilding, 
-  FaSearch, 
-  FaEdit, 
-  FaTrash, 
+import {
+  FaBuilding,
+  FaSearch,
+  FaEdit,
+  FaTrash,
   FaEye,
   FaCheckCircle,
   FaTimesCircle,
@@ -16,7 +15,9 @@ import {
 import { api } from '../../utils/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'next/router';
-import AdminLayout from '../../components/admin/AdminLayout';
+import Head from 'next/head';
+import DashboardLayout from '../../components/DashboardLayout';
+import ConfirmationModal from '../../components/ConfirmationModal';
 
 export default function AdminEmployers() {
   const { userType } = useAuth();
@@ -29,6 +30,15 @@ export default function AdminEmployers() {
   const [selectedEmployer, setSelectedEmployer] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null,
+    isDangerous: false
+  });
 
   useEffect(() => {
     if (userType !== 'admin') {
@@ -46,7 +56,7 @@ export default function AdminEmployers() {
         limit: 10,
         ...(searchTerm && { search: searchTerm })
       });
-      
+
       const response = await api.get(`/admin/employers?${params}`);
       setEmployers(response.data.data.employers || []);
       setPagination(response.data.data.pagination || {});
@@ -68,10 +78,10 @@ export default function AdminEmployers() {
       toast.error('No employers to export');
       return;
     }
-    
+
     const headers = ['ID', 'Company', 'Contact Name', 'Email', 'Verified', 'Active', 'Joined'];
     const csvContent = [
-      headers.join(','), 
+      headers.join(','),
       ...employers.map(e => [
         e._id,
         `"${e.company}"`,
@@ -93,12 +103,19 @@ export default function AdminEmployers() {
     document.body.removeChild(link);
   };
 
-  const handleDeleteEmployer = async (employerId) => {
-    if (!confirm('Are you sure you want to delete this employer? This will also delete all their job postings.')) {
-      return;
-    }
+  const handleDeleteClick = (employer) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Employer',
+      message: `Are you sure you want to delete ${employer.company}? This will also delete all their job postings.`,
+      isDangerous: true,
+      onConfirm: () => executeDeleteEmployer(employer._id)
+    });
+  };
 
+  const executeDeleteEmployer = async (employerId) => {
     setActionLoading(true);
+    setConfirmModal(prev => ({ ...prev, isOpen: false }));
     try {
       await api.delete(`/admin/employers/${employerId}`);
       toast.success('Employer deleted successfully');
@@ -124,8 +141,18 @@ export default function AdminEmployers() {
     }
   };
 
-  const toggleVerification = async (employerId, currentStatus) => {
-    await handleUpdateEmployer(employerId, { isVerified: !currentStatus });
+  const toggleVerification = async (employer) => {
+    if (!employer.user?._id) return;
+    try {
+      setActionLoading(true);
+      await api.put(`/admin/users/${employer.user._id}`, { isVerified: !employer.user.isVerified });
+      toast.success('Verification status updated');
+      fetchEmployers();
+    } catch (error) {
+      toast.error('Failed to update verification');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const toggleActive = async (employerId, currentStatus) => {
@@ -133,7 +160,10 @@ export default function AdminEmployers() {
   };
 
   return (
-    <AdminLayout title="Employer Management">
+    <DashboardLayout>
+      <Head>
+        <title>Employer Management - JobPulse Admin</title>
+      </Head>
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">Employer Management</h1>
@@ -164,7 +194,7 @@ export default function AdminEmployers() {
               />
             </div>
           </div>
-          
+
           <div className="flex items-end">
             <button
               type="submit"
@@ -193,6 +223,8 @@ export default function AdminEmployers() {
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Company</th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Contact</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Jobs</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Apps</th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Active</th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Joined</th>
@@ -222,30 +254,36 @@ export default function AdminEmployers() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-white">{employer.name}</div>
-                      <div className="text-sm text-gray-400">{employer.email}</div>
+                      <div className="text-sm text-white">{employer.user?.name || employer.name}</div>
+                      <div className="text-sm text-gray-400">{employer.user?.email || employer.email}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <div className="text-sm text-white font-medium">{employer.jobCount || 0}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <div className="text-sm text-purple-400 font-medium">{employer.applicationCount || 0}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
-                        onClick={() => toggleVerification(employer._id, employer.isVerified)}
-                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium transition-colors ${
-                          employer.isVerified 
-                            ? 'bg-green-500/20 text-green-300 hover:bg-green-500/30' 
-                            : 'bg-red-500/20 text-red-300 hover:bg-red-500/30'
-                        }`}
+                        onClick={() => toggleVerification(employer)}
+                        disabled={actionLoading}
+                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium transition-colors ${employer.user?.isVerified
+                          ? 'bg-green-500/20 text-green-300 hover:bg-green-500/30'
+                          : 'bg-red-500/20 text-red-300 hover:bg-red-500/30'
+                          }`}
                       >
-                        {employer.isVerified ? <FaCheckCircle className="mr-1" /> : <FaTimesCircle className="mr-1" />}
-                        {employer.isVerified ? 'Verified' : 'Unverified'}
+                        {employer.user?.isVerified ? <FaCheckCircle className="mr-1" /> : <FaTimesCircle className="mr-1" />}
+                        {employer.user?.isVerified ? 'Verified' : 'Unverified'}
                       </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => toggleActive(employer._id, employer.isActive)}
-                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium transition-colors ${
-                          employer.isActive !== false
-                            ? 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30' 
-                            : 'bg-gray-500/20 text-gray-300 hover:bg-gray-500/30'
-                        }`}
+                        disabled={actionLoading}
+                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium transition-colors ${employer.isActive !== false
+                          ? 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30'
+                          : 'bg-gray-500/20 text-gray-300 hover:bg-gray-500/30'
+                          }`}
                       >
                         {employer.isActive !== false ? 'Active' : 'Inactive'}
                       </button>
@@ -262,7 +300,7 @@ export default function AdminEmployers() {
                           <FaEdit />
                         </button>
                         <button
-                          onClick={() => handleDeleteEmployer(employer._id)}
+                          onClick={() => handleDeleteClick(employer)}
                           className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
                         >
                           <FaTrash />
@@ -275,7 +313,7 @@ export default function AdminEmployers() {
             </table>
           </div>
         )}
-        
+
         {/* Pagination */}
         {pagination.totalPages > 1 && (
           <div className="px-6 py-4 border-t border-white/10 flex justify-between items-center">
@@ -302,7 +340,7 @@ export default function AdminEmployers() {
         )}
       </div>
 
-      {/* Edit Modal (Preserved existing fields) */}
+      {/* Edit Modal */}
       {showModal && selectedEmployer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
           <div className="bg-gray-900 rounded-xl border border-white/20 p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
@@ -317,24 +355,24 @@ export default function AdminEmployers() {
                   className="w-full px-4 py-2 bg-black/50 border border-white/20 rounded-lg text-white"
                 />
               </div>
-               <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Contact Name</label>
-                  <input
-                    type="text"
-                    value={selectedEmployer.name}
-                    onChange={(e) => setSelectedEmployer({ ...selectedEmployer, name: e.target.value })}
-                    className="w-full px-4 py-2 bg-black/50 border border-white/20 rounded-lg text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={selectedEmployer.email}
-                    onChange={(e) => setSelectedEmployer({ ...selectedEmployer, email: e.target.value })}
-                    className="w-full px-4 py-2 bg-black/50 border border-white/20 rounded-lg text-white"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Contact Name</label>
+                <input
+                  type="text"
+                  value={selectedEmployer.name}
+                  onChange={(e) => setSelectedEmployer({ ...selectedEmployer, name: e.target.value })}
+                  className="w-full px-4 py-2 bg-black/50 border border-white/20 rounded-lg text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={selectedEmployer.email}
+                  onChange={(e) => setSelectedEmployer({ ...selectedEmployer, email: e.target.value })}
+                  className="w-full px-4 py-2 bg-black/50 border border-white/20 rounded-lg text-white"
+                />
+              </div>
             </div>
             <div className="flex justify-end space-x-3 mt-6">
               <button
@@ -360,6 +398,16 @@ export default function AdminEmployers() {
           </div>
         </div>
       )}
-    </AdminLayout>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        isDangerous={confirmModal.isDangerous}
+      />
+    </DashboardLayout>
   );
 }

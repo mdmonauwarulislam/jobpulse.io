@@ -16,7 +16,10 @@ import {
   FaEnvelope,
   FaBell,
   FaCog,
-  FaBookmark
+  FaBookmark,
+  FaFileAlt,
+  FaClipboardList, // For Audit Logs
+  FaExclamationCircle // For Errors/Logs
 } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { Toaster } from 'react-hot-toast';
@@ -54,7 +57,27 @@ export default function DashboardLayout({ children }) {
     { name: 'Settings', href: '/user/settings', icon: FaCog },
   ];
 
-  const navigation = userType === 'employer' ? employerNavigation : userNavigation;
+  const adminNavigation = [
+    { name: 'Dashboard', href: '/admin/dashboard', icon: FaChartLine },
+    { name: 'Users', href: '/admin/users', icon: FaUsers },
+    { name: 'Employers', href: '/admin/employers', icon: FaBuilding },
+    { name: 'Jobs', href: '/admin/jobs', icon: FaBriefcase },
+    { name: 'Applications', href: '/admin/applications', icon: FaFileAlt },
+    { name: 'Notifications', href: '/admin/notifications', icon: FaBell },
+    { name: 'Audit Logs', href: '/admin/audit-logs', icon: FaClipboardList },
+  ];
+
+  let navigation;
+  switch (userType) {
+    case 'employer':
+      navigation = employerNavigation;
+      break;
+    case 'admin':
+      navigation = adminNavigation;
+      break;
+    default:
+      navigation = userNavigation;
+  }
 
   const handleLogoutClick = () => {
     setLogoutModalOpen(true);

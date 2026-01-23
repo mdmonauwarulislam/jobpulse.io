@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { 
-  FaSearch, 
-  FaEdit, 
-  FaTrash, 
-  FaUser, 
-  FaCheckCircle, 
+import {
+  FaSearch,
+  FaEdit,
+  FaTrash,
+  FaUser,
+  FaCheckCircle,
   FaTimesCircle,
   FaDownload,
   FaShieldAlt
@@ -13,7 +13,9 @@ import {
 import { api } from '../../utils/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'next/router';
-import AdminLayout from '../../components/admin/AdminLayout';
+import Head from 'next/head';
+import DashboardLayout from '../../components/DashboardLayout';
+import ConfirmationModal from '../../components/ConfirmationModal';
 
 export default function AdminUsers() {
   const { user, userType } = useAuth();
@@ -27,6 +29,15 @@ export default function AdminUsers() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null,
+    isDangerous: false
+  });
 
   useEffect(() => {
     if (userType !== 'admin') {
@@ -45,7 +56,7 @@ export default function AdminUsers() {
         ...(searchTerm && { search: searchTerm }),
         ...(roleFilter && { role: roleFilter })
       });
-      
+
       const response = await api.get(`/admin/users?${params}`);
       setUsers(response.data.data.users || []);
       setPagination(response.data.data.pagination || {});
@@ -68,13 +79,13 @@ export default function AdminUsers() {
       toast.error('No users to export');
       return;
     }
-    
+
     // Define headers
     const headers = ['ID', 'Name', 'Email', 'Role', 'Verified', 'Joined'];
-    
+
     // Map data
     const csvContent = [
-      headers.join(','), 
+      headers.join(','),
       ...users.map(u => [
         u._id,
         `"${u.name}"`, // Quote name to handle commas
@@ -96,12 +107,19 @@ export default function AdminUsers() {
     document.body.removeChild(link);
   };
 
-  const handleDeleteUser = async (userId) => {
-    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-      return;
-    }
+  const handleDeleteClick = (userToDelete) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete User',
+      message: `Are you sure you want to delete ${userToDelete.name}? This action cannot be undone.`,
+      isDangerous: true,
+      onConfirm: () => executeDeleteUser(userToDelete._id)
+    });
+  };
 
+  const executeDeleteUser = async (userId) => {
     setActionLoading(true);
+    setConfirmModal(prev => ({ ...prev, isOpen: false }));
     try {
       await api.delete(`/admin/users/${userId}`);
       toast.success('User deleted successfully');
@@ -132,7 +150,10 @@ export default function AdminUsers() {
   };
 
   return (
-    <AdminLayout title="User Management">
+    <DashboardLayout>
+      <Head>
+        <title>User Management - JobPulse Admin</title>
+      </Head>
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">User Management</h1>
@@ -163,7 +184,7 @@ export default function AdminUsers() {
               />
             </div>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-2">Role</label>
             <select
@@ -172,11 +193,12 @@ export default function AdminUsers() {
               className="w-full px-4 py-2 bg-black/50 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
             >
               <option value="">All Roles</option>
-              <option value="user">Job Seekers</option>
+              <option value="candidate">Candidates</option>
+              <option value="employer">Employers</option>
               <option value="admin">Admins</option>
             </select>
           </div>
-          
+
           <div className="flex items-end">
             <button
               type="submit"
@@ -225,9 +247,8 @@ export default function AdminUsers() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full ${
-                        u.role === 'admin' ? 'bg-purple-500/20 text-purple-300' : 'bg-blue-500/20 text-blue-300'
-                      }`}>
+                      <span className={`px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full ${u.role === 'admin' ? 'bg-purple-500/20 text-purple-300' : 'bg-blue-500/20 text-blue-300'
+                        }`}>
                         {u.role === 'admin' ? <FaShieldAlt className="mr-1" /> : <FaUser className="mr-1" />}
                         {u.role}
                       </span>
@@ -235,11 +256,10 @@ export default function AdminUsers() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => toggleVerification(u._id, u.isVerified)}
-                        className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium transition-colors ${
-                          u.isVerified 
-                            ? 'bg-green-500/20 text-green-300 hover:bg-green-500/30' 
-                            : 'bg-red-500/20 text-red-300 hover:bg-red-500/30'
-                        }`}
+                        className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium transition-colors ${u.isVerified
+                          ? 'bg-green-500/20 text-green-300 hover:bg-green-500/30'
+                          : 'bg-red-500/20 text-red-300 hover:bg-red-500/30'
+                          }`}
                       >
                         {u.isVerified ? <FaCheckCircle className="mr-1" /> : <FaTimesCircle className="mr-1" />}
                         {u.isVerified ? 'Verified' : 'Unverified'}
@@ -257,7 +277,7 @@ export default function AdminUsers() {
                           <FaEdit />
                         </button>
                         <button
-                          onClick={() => handleDeleteUser(u._id)}
+                          onClick={() => handleDeleteClick(u)}
                           disabled={u._id === user?._id}
                           className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-30"
                         >
@@ -271,7 +291,7 @@ export default function AdminUsers() {
             </table>
           </div>
         )}
-        
+
         {/* Pagination */}
         {pagination.totalPages > 1 && (
           <div className="px-6 py-4 border-t border-white/10 flex justify-between items-center">
@@ -306,26 +326,26 @@ export default function AdminUsers() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-1">Name</label>
-                <input 
-                  value={selectedUser.name} 
-                  onChange={e => setSelectedUser({...selectedUser, name: e.target.value})}
+                <input
+                  value={selectedUser.name}
+                  onChange={e => setSelectedUser({ ...selectedUser, name: e.target.value })}
                   className="w-full bg-black/50 border border-white/20 rounded p-2 text-white"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-1">Email</label>
-                <input 
+                <input
                   type="email"
-                  value={selectedUser.email} 
-                  onChange={e => setSelectedUser({...selectedUser, email: e.target.value})}
+                  value={selectedUser.email}
+                  onChange={e => setSelectedUser({ ...selectedUser, email: e.target.value })}
                   className="w-full bg-black/50 border border-white/20 rounded p-2 text-white"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-1">Role</label>
-                <select 
-                  value={selectedUser.role} 
-                  onChange={e => setSelectedUser({...selectedUser, role: e.target.value})}
+                <select
+                  value={selectedUser.role}
+                  onChange={e => setSelectedUser({ ...selectedUser, role: e.target.value })}
                   className="w-full bg-black/50 border border-white/20 rounded p-2 text-white"
                 >
                   <option value="user">User</option>
@@ -345,7 +365,7 @@ export default function AdminUsers() {
             </div>
             <div className="mt-6 flex justify-end space-x-3">
               <button onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-400 hover:text-white transition-colors">Cancel</button>
-              <button 
+              <button
                 onClick={() => handleUpdateUser(selectedUser._id, selectedUser)}
                 disabled={actionLoading}
                 className="px-4 py-2 bg-orange-600 rounded text-white hover:bg-orange-700 transition-colors disabled:opacity-50"
@@ -356,6 +376,16 @@ export default function AdminUsers() {
           </div>
         </div>
       )}
-    </AdminLayout>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        isDangerous={confirmModal.isDangerous}
+      />
+    </DashboardLayout>
   );
 }

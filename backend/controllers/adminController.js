@@ -2,6 +2,7 @@ const User = require('../models/User');
 const EmployerProfile = require('../models/EmployerProfile');
 const Job = require('../models/Job');
 const Application = require('../models/Application');
+const CandidateProfile = require('../models/CandidateProfile');
 const Notification = require('../models/Notification');
 const asyncHandler = require('../utils/asyncHandler'); 
 const { logAdminAction } = require('../utils/auditLogger');
@@ -34,11 +35,35 @@ const getAllUsers = asyncHandler(async (req, res) => {
     ];
   }
   if (role) {
-    const allowedRoles = ['user', 'admin'];
+    const allowedRoles = ['candidate', 'employer', 'admin'];
     if (!allowedRoles.includes(role)) {
-      return res.status(400).json({ success: false, error: 'Invalid role filter. Must be "user" or "admin".' });
+      return res.status(400).json({ success: false, error: 'Invalid role filter.' });
     }
     filter.role = role;
+  }
+
+  if (req.query.groupBy === 'month' && req.query.count === 'true') {
+    const stats = await User.aggregate([
+      {
+        $group: {
+          _id: { $month: "$createdAt" },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          label: {
+            $let: {
+              vars: { monthsInString: [, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] },
+              in: { $arrayElemAt: ['$$monthsInString', '$_id'] }
+            }
+          },
+          count: 1,
+          _id: 0
+        }
+      }
+    ]);
+    return res.json({ success: true, data: stats });
   }
 
   const skip = (page - 1) * limit;
@@ -47,8 +72,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
     .select('-password -verificationToken -resetPasswordToken -resetPasswordExpire')
     .sort({ createdAt: -1 })
     .skip(skip)
-    .limit(limit)
-    .populate('skills');  
+    .limit(limit);
 
   const total = await User.countDocuments(filter);
   const totalPages = Math.ceil(total / limit);
@@ -115,8 +139,7 @@ const getUserById = asyncHandler(async (req, res) => {
   const { userId } = req.params;
 
   const user = await User.findById(userId)
-    .select('-password -verificationToken -resetPasswordToken -resetPasswordExpire')
-    .populate('skills');
+    .select('-password -verificationToken -resetPasswordToken -resetPasswordExpire');
 
   if (!user) {
     return res.status(404).json({ success: false, error: 'User not found.' });
@@ -145,7 +168,7 @@ const updateUser = asyncHandler(async (req, res) => {
     updateData,
     { new: true, runValidators: true } 
   ).select('-password -verificationToken -resetPasswordToken -resetPasswordExpire')
-   .populate('skills');
+   .select('-password -verificationToken -resetPasswordToken -resetPasswordExpire');
 
   if (!user) {
     return res.status(404).json({ success: false, error: 'User not found.' });
@@ -244,11 +267,21 @@ const getAllEmployerProfiles = asyncHandler(async (req, res) => {
   const skip = (page - 1) * limit;
 
 
-  const employers = await EmployerProfile.find(filter)
+  let employers = await EmployerProfile.find(filter)
+    .populate('user', 'name email isVerified')
     .select('-password -verificationToken -resetPasswordToken -resetPasswordExpire')
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
+
+  // Add job and application counts
+  employers = await Promise.all(employers.map(async (emp) => {
+    const jobCount = await Job.countDocuments({ employer: emp._id });
+    const jobs = await Job.find({ employer: emp._id }).select('_id');
+    const jobIds = jobs.map(j => j._id);
+    const applicationCount = await Application.countDocuments({ job: { $in: jobIds } });
+    return { ...emp.toObject(), jobCount, applicationCount };
+  }));
 
   const total = await EmployerProfile.countDocuments(filter);
   const totalPages = Math.ceil(total / limit);
@@ -449,13 +482,43 @@ const getAllJobs = asyncHandler(async (req, res) => {
   }
 
 
+  if (req.query.groupBy === 'month' && req.query.count === 'true') {
+    const stats = await Job.aggregate([
+      {
+        $group: {
+          _id: { $month: "$createdAt" },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          label: {
+            $let: {
+              vars: { monthsInString: [, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] },
+              in: { $arrayElemAt: ['$$monthsInString', '$_id'] }
+            }
+          },
+          count: 1,
+          _id: 0
+        }
+      }
+    ]);
+    return res.json({ success: true, data: stats });
+  }
+
   const skip = (page - 1) * limit;
 
-  const jobs = await Job.find(filter)
+  let jobs = await Job.find(filter)
     .populate('employer', 'companyName companyLogo email') 
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
+
+  // Add application counts
+  jobs = await Promise.all(jobs.map(async (job) => {
+    const applicationCount = await Application.countDocuments({ job: job._id });
+    return { ...job.toObject(), applicationCount };
+  }));
 
   const total = await Job.countDocuments(filter);
   const totalPages = Math.ceil(total / limit);
@@ -500,15 +563,64 @@ const getAllApplications = asyncHandler(async (req, res) => {
     filter.status = status;
   }
 
+  if (req.query.groupBy === 'month' && req.query.count === 'true') {
+    const stats = await Application.aggregate([
+      {
+        $group: {
+          _id: { $month: "$createdAt" },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          label: {
+            $let: {
+              vars: { monthsInString: [, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] },
+              in: { $arrayElemAt: ['$$monthsInString', '$_id'] }
+            }
+          },
+          count: 1,
+          _id: 0
+        }
+      }
+    ]);
+    return res.json({ success: true, data: stats });
+  }
+
   const skip = (page - 1) * limit;
   
-  const applications = await Application.find(filter)
-    .populate('job', 'title company location') 
-    .populate('applicant', 'name email phone') 
-    .populate('employer', 'companyName email') 
+  let applications = await Application.find(filter)
+    .populate({
+      path: 'job',
+      select: 'title company location',
+      populate: { path: 'employer', select: 'company email' }
+    })
+    .populate('applicant', 'name email') 
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
+
+  // Fetch phone numbers from CandidateProfiles
+  const applicantIds = applications.map(app => app.applicant?._id).filter(id => id);
+  // Assuming CandidateProfile is required at top. If not, I might need to require it or hope it's there.
+  // I will assume it is available as it's a controller. If not, I'll error.
+  // Better: I'll check imports in next step if I can, but to be fast I'll assume standard imports.
+  // Actually, I should use `require` if not sure, but `const CandidateProfile = require('../models/CandidateProfile');` at top is best.
+  // I cant see top. I'll assume it is there.
+  
+  const profiles = await CandidateProfile.find({ user: { $in: applicantIds } }).select('user phone');
+  const phoneMap = {};
+  profiles.forEach(p => {
+    if (p.user) phoneMap[p.user.toString()] = p.phone;
+  });
+
+  applications = applications.map(app => {
+    const appObj = app.toObject();
+    if (appObj.applicant) {
+      appObj.applicant.phone = phoneMap[appObj.applicant._id.toString()] || null;
+    }
+    return appObj;
+  });
 
   const total = await Application.countDocuments(filter);
   const totalPages = Math.ceil(total / limit);
@@ -549,12 +661,12 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     .limit(5);
 
   const recentEmployerProfiles = await EmployerProfile.find()
-    .select('companyName email createdAt')
+    .select('company email createdAt')
     .sort({ createdAt: -1 })
     .limit(5);
 
   const recentJobs = await Job.find({ isActive: true, applicationDeadline: { $gte: new Date() } }) 
-    .populate('employer', 'companyName') 
+    .populate('employer', 'company') 
     .select('title company createdAt')
     .sort({ createdAt: -1 })
     .limit(5);

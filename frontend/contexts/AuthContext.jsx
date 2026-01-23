@@ -48,14 +48,25 @@ export function AuthProvider({ children }) {
       const response = await api.get('/auth/me');
       // Support both user and employer objects from backend
       // Support both user (legacy), candidate, and employer objects
-      const userObj = response.data.data.user || response.data.data.candidate || response.data.data.employer;
+      let userObj = response.data.data.user || response.data.data.candidate || response.data.data.employer || response.data.data.admin;
       const profileObj = response.data.data.profile || {};
+
+      // Ensure admins are always verified
+      if (userObj && (response.data.data.admin || userObj.role === 'admin' || response.data.data.userType === 'admin')) {
+        if (userObj.isVerified === undefined) userObj.isVerified = true;
+        // If it's explicitly false in DB but they are admin, we might want to override or trust DB.
+        // Assuming internal admins should be verified:
+        userObj.isVerified = true;
+      }
+
       setUser({ ...userObj, ...profileObj, profileCompletion: response.data.data.profileCompletion });
       // Prefer userType from cookie, else infer from user data
       if (savedUserType) {
         setUserType(savedUserType);
       } else if (response.data.data.userType) {
         setUserType(response.data.data.userType);
+      } else if (response.data.data.admin) {
+        setUserType('admin');
       } else if (response.data.data.user?.role === 'admin') {
         setUserType('admin');
       } else if (response.data.data.employer) {
@@ -98,9 +109,15 @@ export function AuthProvider({ children }) {
       } else if (data.employer) {
         userObj = data.employer;
         role = 'employer';
+      } else if (data.admin) { // Check for explicit admin key in response
+        userObj = data.admin;
+        role = 'admin';
+        // Ensure admins are considered verified if the field is missing/false, as they are internal users
+        if (userObj.isVerified === undefined) userObj.isVerified = true;
       } else if (data.user && data.user.role === 'admin') {
         userObj = data.user;
         role = 'admin';
+        if (userObj.isVerified === undefined) userObj.isVerified = true;
       } else if (data.user) {
         // Fallback for generic user key
         userObj = data.user;
