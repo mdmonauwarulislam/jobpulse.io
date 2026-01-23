@@ -1,53 +1,29 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { 
-  FaBriefcase, 
-  FaFacebook, 
-  FaTwitter, 
-  FaLinkedin, 
+import {
+  FaBriefcase,
+  FaFacebook,
+  FaTwitter,
+  FaLinkedin,
   FaInstagram,
   FaEnvelope,
   FaPhone,
   FaMapMarkerAlt,
   FaArrowRight,
   FaHeart,
-  FaRocket,
-  FaShieldAlt,
-  FaUsers,
-  FaStar,
-  FaCheckCircle,
-  FaGlobe,
-  FaDownload,
-  FaMobileAlt
+  FaHome,
+  FaInfoCircle
 } from 'react-icons/fa';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
-    'For Job Seekers': [
+    'Explore': [
+      { name: 'Home', href: '/', icon: FaHome },
       { name: 'Browse Jobs', href: '/jobs', icon: FaBriefcase },
-      { name: 'Create Profile', href: '/auth/register', icon: FaUsers },
-      { name: 'Career Advice', href: '/career-advice', icon: FaRocket },
-      { name: 'Salary Guide', href: '/salary-guide', icon: FaShieldAlt },
-    ],
-    'For Employers': [
-      { name: 'Post a Job', href: '/employer/post-job', icon: FaBriefcase },
-      { name: 'Browse Candidates', href: '/employer/candidates', icon: FaUsers },
-      { name: 'Pricing', href: '/pricing', icon: FaShieldAlt },
-      { name: 'Employer Resources', href: '/employer-resources', icon: FaRocket },
-    ],
-    'Company': [
-      { name: 'About Us', href: '/about', icon: FaUsers },
+      { name: 'About Us', href: '/about', icon: FaInfoCircle },
       { name: 'Contact', href: '/contact', icon: FaEnvelope },
-      { name: 'Privacy Policy', href: '/privacy', icon: FaShieldAlt },
-      { name: 'Terms of Service', href: '/terms', icon: FaShieldAlt },
-    ],
-    'Support': [
-      { name: 'Help Center', href: '/help', icon: FaRocket },
-      { name: 'Contact Support', href: '/contact', icon: FaEnvelope },
-      { name: 'FAQ', href: '/faq', icon: FaBriefcase },
-      { name: 'Report Issue', href: '/report', icon: FaShieldAlt },
     ],
   };
 
@@ -62,12 +38,6 @@ export default function Footer() {
     { icon: FaEnvelope, text: 'contact@jobpulse.com', href: 'mailto:contact@jobpulse.com' },
     { icon: FaPhone, text: '+1 (555) 123-4567', href: 'tel:+15551234567' },
     { icon: FaMapMarkerAlt, text: '123 Job Street, Career City, CC 12345', href: '#' },
-  ];
-
-  const quickActions = [
-    { icon: FaDownload, text: 'Download App', href: '#', color: 'from-orange-500 to-red-500' },
-    { icon: FaMobileAlt, text: 'Mobile Version', href: '#', color: 'from-red-500 to-orange-500' },
-    { icon: FaGlobe, text: 'Global Jobs', href: '#', color: 'from-orange-400 to-red-400' },
   ];
 
   return (
@@ -86,10 +56,10 @@ export default function Footer() {
             )`,
           }}></div>
         </div>
-        
+
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-red-500/3 to-orange-400/5"></div>
-        
+
         {/* Floating Elements */}
         <motion.div
           className="absolute top-20 left-20 w-1 h-1 bg-orange-400 rounded-full"
@@ -132,15 +102,9 @@ export default function Footer() {
       </div>
 
       <div className="container-custom py-20 relative z-10">
-       
-
-          
-
-         
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand */}
-          <motion.div 
+          <motion.div
             className="lg:col-span-2"
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -154,7 +118,7 @@ export default function Footer() {
               className="mb-6"
             >
               <Link href="/" className="flex items-center space-x-3 group">
-                <motion.div 
+                <motion.div
                   className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center shadow-2xl"
                   whileHover={{ scale: 1.1, rotate: 5 }}
                   transition={{ duration: 0.2 }}
@@ -166,20 +130,20 @@ export default function Footer() {
                 </span>
               </Link>
             </motion.div>
-            
-            <motion.p 
+
+            <motion.p
               className="text-gray-300 mb-8 max-w-md leading-relaxed"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
               viewport={{ once: true }}
             >
-              Connect with top companies and find your dream job. JobPulse makes job searching 
+              Connect with top companies and find your dream job. JobPulse makes job searching
               and hiring simple, efficient, and effective with our modern platform.
             </motion.p>
-            
+
             {/* Contact Info */}
-            <motion.div 
+            <motion.div
               className="space-y-4"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -209,14 +173,14 @@ export default function Footer() {
 
           {/* Footer Links */}
           {Object.entries(footerLinks).map(([category, links], categoryIndex) => (
-            <motion.div 
+            <motion.div
               key={category}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: categoryIndex * 0.1 }}
               viewport={{ once: true }}
             >
-              <motion.h3 
+              <motion.h3
                 className="text-lg font-semibold mb-6 text-white"
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -227,7 +191,7 @@ export default function Footer() {
               </motion.h3>
               <ul className="space-y-3">
                 {links.map((link, linkIndex) => (
-                  <motion.li 
+                  <motion.li
                     key={link.name}
                     initial={{ opacity: 0, x: -20 }}
                     whileInView={{ opacity: 1, x: 0 }}
@@ -238,7 +202,7 @@ export default function Footer() {
                       whileHover={{ x: 5 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <Link 
+                      <Link
                         href={link.href}
                         className="flex items-center space-x-2 text-gray-300 hover:text-orange-400 transition-colors duration-300 group"
                       >
@@ -268,7 +232,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom Section */}
-        <motion.div 
+        <motion.div
           className="mt-16 pt-8"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -276,7 +240,7 @@ export default function Footer() {
           viewport={{ once: true }}
         >
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <motion.div 
+            <motion.div
               className="text-gray-400 text-sm mb-6 md:mb-0 flex items-center space-x-2"
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -292,9 +256,9 @@ export default function Footer() {
                 <FaHeart className="w-3 h-3" />
               </motion.div>
             </motion.div>
-            
+
             {/* Social Links */}
-            <motion.div 
+            <motion.div
               className="flex space-x-4"
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}

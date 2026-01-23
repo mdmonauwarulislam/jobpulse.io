@@ -30,7 +30,6 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
   const navigation = [
     { name: 'Home', href: '/', icon: FaHome },
     { name: 'Jobs', href: '/jobs', icon: FaBriefcase },
-    { name: 'Companies', href: '/companies', icon: FaBuilding },
     { name: 'About', href: '/about', icon: FaInfoCircle },
     { name: 'Contact', href: '/contact', icon: FaEnvelope },
   ];
