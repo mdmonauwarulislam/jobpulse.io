@@ -277,34 +277,34 @@ export default function JobDetails() {
                 transition={{ duration: 0.5 }}
                 className="card"
               >
-                <div className="card-body p-8">
+                <div className="card-body p-6 md:p-8">
                   <div className="mb-6">
-                    <div className="flex items-start justify-between mb-4">
+                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
                       <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
                           {job.title}
                         </h1>
-                        <div className="flex items-center space-x-4 text-gray-600 dark:text-gray-400">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-gray-600 dark:text-gray-400">
                           <div className="flex items-center">
-                            <FaBuilding className="mr-2" />
+                            <FaBuilding className="mr-2 flex-shrink-0" />
                             {job.employer?.company || 'Company'}
                           </div>
                           <div className="flex items-center">
-                            <FaMapMarkerAlt className="mr-2" />
+                            <FaMapMarkerAlt className="mr-2 flex-shrink-0" />
                             {job.location}
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 w-full md:w-auto">
                         <button
-                          className={`btn-sm ${isSaved ? 'btn-primary' : 'btn-outline'}`}
+                          className={`btn-sm flex-1 md:flex-none justify-center ${isSaved ? 'btn-primary' : 'btn-outline'}`}
                           onClick={handleSaveJob}
                           disabled={saveLoading}
                         >
                           <FaBookmark className="mr-1" />
                           {isSaved ? 'Saved' : 'Save'}
                         </button>
-                        <button className="btn-outline btn-sm">
+                        <button className="btn-outline btn-sm flex-1 md:flex-none justify-center">
                           <FaShare className="mr-1" />
                           Share
                         </button>
@@ -339,7 +339,7 @@ export default function JobDetails() {
                   {/* Job Description */}
                   <div className="mb-8">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Job Description</h2>
-                    <div className="prose prose-gray dark:prose-invert max-w-none">
+                    <div className="prose prose-gray dark:prose-invert max-w-none break-words overflow-hidden">
                       <div
                         dangerouslySetInnerHTML={{ __html: job.description }}
                         className="text-gray-700 dark:text-gray-300 leading-relaxed"
@@ -409,7 +409,7 @@ export default function JobDetails() {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="card mt-8"
               >
-                <div className="card-body p-8">
+                <div className="card-body p-6 md:p-8">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">About {job.employer?.company || 'Company'}</h2>
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>

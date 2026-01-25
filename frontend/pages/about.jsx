@@ -1,9 +1,9 @@
 import Head from 'next/head';
 import { motion } from 'framer-motion';
-import { 
-  FaBriefcase, 
-  FaUsers, 
-  FaRocket, 
+import {
+  FaBriefcase,
+  FaUsers,
+  FaRocket,
   FaHeart,
   FaAward,
   FaGlobe,
@@ -54,36 +54,7 @@ export default function About() {
     }
   ];
 
-  const team = [
-    {
-      name: 'Sarah Johnson',
-      role: 'CEO & Founder',
-      image: '/images/team/sarah.jpg',
-      bio: 'Former HR executive with 15+ years in talent acquisition.',
-      social: { linkedin: '#', twitter: '#', github: '#' }
-    },
-    {
-      name: 'Michael Chen',
-      role: 'CTO',
-      image: '/images/team/michael.jpg',
-      bio: 'Tech leader with expertise in scalable platforms and AI.',
-      social: { linkedin: '#', twitter: '#', github: '#' }
-    },
-    {
-      name: 'Emily Rodriguez',
-      role: 'Head of Product',
-      image: '/images/team/emily.jpg',
-      bio: 'Product strategist focused on user experience and growth.',
-      social: { linkedin: '#', twitter: '#', github: '#' }
-    },
-    {
-      name: 'David Thompson',
-      role: 'Head of Sales',
-      image: '/images/team/david.jpg',
-      bio: 'Sales leader with deep understanding of employer needs.',
-      social: { linkedin: '#', twitter: '#', github: '#' }
-    }
-  ];
+
 
   return (
     <>
@@ -96,7 +67,7 @@ export default function About() {
         {/* Background Effects */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-red-500/5 to-orange-400/5"></div>
-          
+
           {/* Base Lighting Effects - Similar to home page */}
           <motion.div
             className="absolute bottom-0 left-1/4 w-96 h-96 bg-orange-500/30 rounded-full blur-3xl"
@@ -246,9 +217,9 @@ export default function About() {
                 transition={{ duration: 0.8 }}
                 className="text-center max-w-7xl mx-auto"
               >
-                <div className="relative  backdrop-blur-xl  p-12 shadow-2xl">
-                  <motion.h1 
-                    className="text-6xl font-bold text-white mb-6"
+                <div className="relative backdrop-blur-xl p-6 md:p-12 shadow-2xl">
+                  <motion.h1
+                    className="text-4xl md:text-6xl font-bold text-white mb-4 md:mb-6"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.2 }}
@@ -271,20 +242,20 @@ export default function About() {
                       Opportunity
                     </motion.span>
                   </motion.h1>
-                  
-                  <motion.p 
-                    className="text-xl text-gray-300 mb-12 max-w-5xl mx-auto leading-relaxed"
+
+                  <motion.p
+                    className="text-lg md:text-xl text-gray-300 mb-8 md:mb-12 max-w-5xl mx-auto leading-relaxed"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.4 }}
                   >
-                    JobPulse is more than just a job board. We're a platform that empowers individuals 
-                    to find their dream careers and helps companies discover exceptional talent through 
+                    JobPulse is more than just a job board. We're a platform that empowers individuals
+                    to find their dream careers and helps companies discover exceptional talent through
                     innovative technology and human-centered design.
                   </motion.p>
 
                   {/* Stats Grid */}
-                  <motion.div 
+                  <motion.div
                     className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -300,14 +271,14 @@ export default function About() {
                         className="text-center group"
                       >
                         <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-2xl group-hover:shadow-xl transition-all duration-300">
-                          <motion.div 
+                          <motion.div
                             className={`w-16 h-16 bg-gradient-to-r ${stat.color} rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:shadow-xl transition-all duration-300`}
                             whileHover={{ scale: 1.1, rotate: 5 }}
                             transition={{ duration: 0.2 }}
                           >
                             <stat.icon className="text-2xl text-white" />
                           </motion.div>
-                          <motion.div 
+                          <motion.div
                             className="text-3xl font-bold text-white mb-2"
                             whileHover={{ scale: 1.05 }}
                             transition={{ duration: 0.2 }}
@@ -320,13 +291,13 @@ export default function About() {
                     ))}
                   </motion.div>
 
-              
+
                 </div>
               </motion.div>
             </div>
           </section>
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 md:py-20 py-2">
             {/* Mission Section */}
             <motion.section
               initial={{ opacity: 0, y: 30 }}
@@ -337,8 +308,8 @@ export default function About() {
             >
               <div className="grid lg:grid-cols-2 gap-12 items-center">
                 <div>
-                  <motion.h2 
-                    className="text-4xl font-bold text-white mb-6"
+                  <motion.h2
+                    className="text-3xl md:text-4xl font-bold text-white mb-6"
                     initial={{ opacity: 0, x: -30 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.8 }}
@@ -346,30 +317,30 @@ export default function About() {
                   >
                     Our Mission
                   </motion.h2>
-                  <motion.p 
+                  <motion.p
                     className="text-lg text-gray-300 mb-6 leading-relaxed"
                     initial={{ opacity: 0, x: -30 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.8, delay: 0.2 }}
                     viewport={{ once: true }}
                   >
-                    We believe that everyone deserves to find meaningful work that aligns with their 
-                    passions and skills. Our mission is to create a seamless, efficient, and 
-                    user-friendly platform that connects talented individuals with companies that 
+                    We believe that everyone deserves to find meaningful work that aligns with their
+                    passions and skills. Our mission is to create a seamless, efficient, and
+                    user-friendly platform that connects talented individuals with companies that
                     value their contributions.
                   </motion.p>
-                  <motion.p 
+                  <motion.p
                     className="text-lg text-gray-300 mb-8 leading-relaxed"
                     initial={{ opacity: 0, x: -30 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.8, delay: 0.4 }}
                     viewport={{ once: true }}
                   >
-                    For job seekers, we provide access to thousands of opportunities across various 
-                    industries and locations. For employers, we offer powerful tools to find and 
+                    For job seekers, we provide access to thousands of opportunities across various
+                    industries and locations. For employers, we offer powerful tools to find and
                     connect with the best candidates for their organizations.
                   </motion.p>
-                  <motion.div 
+                  <motion.div
                     className="flex items-center space-x-4"
                     initial={{ opacity: 0, x: -30 }}
                     whileInView={{ opacity: 1, x: 0 }}
@@ -389,14 +360,14 @@ export default function About() {
                     </div>
                   </motion.div>
                 </div>
-                <motion.div 
+                <motion.div
                   className="relative"
                   initial={{ opacity: 0, x: 30 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.8 }}
                   viewport={{ once: true }}
                 >
-                  <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-3xl border border-white/20 p-8 shadow-2xl">
+                  <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-3xl border border-white/20 p-6 md:p-8 shadow-2xl">
                     <h3 className="text-2xl font-bold text-white mb-6">Why Choose JobPulse?</h3>
                     <ul className="space-y-4">
                       {[
@@ -406,7 +377,7 @@ export default function About() {
                         '24/7 customer support',
                         'Mobile-optimized experience'
                       ].map((item, index) => (
-                        <motion.li 
+                        <motion.li
                           key={index}
                           className="flex items-center text-gray-300"
                           initial={{ opacity: 0, x: 20 }}
@@ -433,7 +404,7 @@ export default function About() {
               className="mb-20"
             >
               <div className="text-center mb-12">
-                <motion.h2 
+                <motion.h2
                   className="text-4xl font-bold text-white mb-4"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -442,7 +413,7 @@ export default function About() {
                 >
                   Our Values
                 </motion.h2>
-                <motion.p 
+                <motion.p
                   className="text-lg text-gray-300 max-w-3xl mx-auto"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -477,7 +448,7 @@ export default function About() {
             </motion.section>
 
             {/* Team Section */}
-            <motion.section
+            {/* <motion.section
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
@@ -486,7 +457,7 @@ export default function About() {
             >
               <div className="text-center mb-12">
                 <motion.h2 
-                  className="text-4xl font-bold text-white mb-4"
+                  className="text-3xl md:text-4xl font-bold text-white mb-4"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8 }}
@@ -545,7 +516,7 @@ export default function About() {
                   </motion.div>
                 ))}
               </div>
-            </motion.section>
+            </motion.section> */}
 
             {/* CTA Section */}
             <motion.section
@@ -555,8 +526,8 @@ export default function About() {
               viewport={{ once: true }}
               className="text-center"
             >
-              <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-3xl border border-white/20 p-12 shadow-2xl">
-                <motion.h2 
+              <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-3xl border border-white/20 p-8 md:p-12 shadow-2xl">
+                <motion.h2
                   className="text-4xl font-bold text-white mb-6"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -565,7 +536,7 @@ export default function About() {
                 >
                   Ready to Get Started?
                 </motion.h2>
-                <motion.p 
+                <motion.p
                   className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}

@@ -28,7 +28,7 @@ export default function Register() {
     setLoading(true);
     try {
       const endpoint = userType === 'employer' ? '/auth/register-employer' : '/auth/register-user';
-      
+
       const payload = {
         name: data.name,
         email: data.email,
@@ -42,7 +42,7 @@ export default function Register() {
       const response = await api.post(endpoint, payload);
 
       if (response.data.success) {
-        toast.success('Registration successful! Please check your email to verify your account.');
+        toast.success('Registration successful! Please check email to verify your account.');
         router.push('/auth/login');
       }
     } catch (error) {
@@ -82,7 +82,7 @@ export default function Register() {
         {/* Background Effects */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-orange-500/2 via-red-500/1 to-orange-400/2"></div>
-          
+
           {/* Animated Beam Background */}
           <div className="absolute inset-0 overflow-hidden">
             {/* Beam 1 - Diagonal */}
@@ -102,7 +102,7 @@ export default function Register() {
                 left: "20%"
               }}
             />
-            
+
             {/* Beam 2 - Horizontal */}
             <motion.div
               className="absolute top-1/3 left-0 right-0 h-3 bg-gradient-to-r from-transparent via-red-500/40 to-transparent blur"
@@ -117,7 +117,7 @@ export default function Register() {
                 delay: 2,
               }}
             />
-            
+
             {/* Beam 3 - Vertical */}
             <motion.div
               className="absolute top-0 bottom-0 right-1/4 w-3 bg-gradient-to-b from-transparent via-orange-400/40 to-transparent blur"
@@ -133,7 +133,7 @@ export default function Register() {
               }}
             />
           </div>
-          
+
           <motion.div
             className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"
             animate={{
@@ -163,8 +163,8 @@ export default function Register() {
 
         <div className="relative z-10 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
           <div className="w-full max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+
               {/* Left Column - Features */}
               <motion.div
                 initial={{ opacity: 0, x: -50 }}
@@ -186,26 +186,26 @@ export default function Register() {
                       JobPulse
                     </span>
                   </motion.div>
-                  
+
                   <motion.h1
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.3 }}
-                    className="text-4xl lg:text-5xl font-bold text-white leading-tight"
+                    className="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight"
                   >
                     Start Your Journey
                     <span className="block bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
                       With JobPulse
                     </span>
                   </motion.h1>
-                  
+
                   <motion.p
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.4 }}
                     className="text-xl text-gray-300 leading-relaxed"
                   >
-                    Join thousands of professionals and companies finding their perfect match. 
+                    Join thousands of professionals and companies finding their perfect match.
                     Create your account and unlock endless opportunities.
                   </motion.p>
                 </div>
@@ -261,8 +261,8 @@ export default function Register() {
                 >
                   {/* Glow Effect */}
                   <div className="absolute -inset-1 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-3xl blur opacity-0 transition duration-500"></div>
-                  
-                  <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-3xl border border-white/20 p-8 shadow-2xl">
+
+                  <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-3xl border border-white/20 p-6 md:p-8 shadow-2xl">
                     <div className="text-center mb-8">
                       <h2 className="text-2xl font-bold text-white mb-2">Create Account</h2>
                       <p className="text-gray-300">Join JobPulse and start your journey</p>
@@ -279,11 +279,10 @@ export default function Register() {
                           onClick={() => setUserType('user')}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className={`flex items-center justify-center p-3 rounded-xl border-2 transition-all ${
-                            userType === 'user'
+                          className={`flex items-center justify-center p-3 rounded-xl border-2 transition-all ${userType === 'user'
                               ? 'border-orange-500 bg-orange-500/20 text-orange-300'
                               : 'border-gray-600 hover:border-orange-500/50 text-gray-300 hover:text-orange-300'
-                          }`}
+                            }`}
                         >
                           <FaUser className="w-4 h-4 mr-2" />
                           <span className="text-sm font-medium">Find Jobs</span>
@@ -293,11 +292,10 @@ export default function Register() {
                           onClick={() => setUserType('employer')}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className={`flex items-center justify-center p-3 rounded-xl border-2 transition-all ${
-                            userType === 'employer'
+                          className={`flex items-center justify-center p-3 rounded-xl border-2 transition-all ${userType === 'employer'
                               ? 'border-orange-500 bg-orange-500/20 text-orange-300'
                               : 'border-gray-600 hover:border-orange-500/50 text-gray-300 hover:text-orange-300'
-                          }`}
+                            }`}
                         >
                           <FaBuilding className="w-4 h-4 mr-2" />
                           <span className="text-sm font-medium">Hire Talent</span>

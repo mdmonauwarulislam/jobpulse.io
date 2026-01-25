@@ -60,10 +60,10 @@ export default function Home() {
 
         // Mock stats for now - in real app, you'd have a stats endpoint
         setStats({
-          totalJobs: 1250,
-          totalCompanies: 85,
-          totalUsers: 3200,
-          totalApplications: 8900,
+          totalJobs: 10,
+          totalCompanies: 1,
+          totalUsers: 2,
+          totalApplications: 1,
         });
       } catch (error) {
         console.error("Error fetching home data:", error);
@@ -142,21 +142,23 @@ export default function Home() {
 
   // Company logos for hero section
   const companyLogos = [
-    { name: "Google", logo: "/images/company-logo/google-icon-logo-svgrepo-com.svg" },
-    { name: "Apple", logo: "/images/company-logo/apple-logo-svgrepo-com.svg" },
-    { name: "OLA Cabs", logo: "/images/company-logo/ola-cabs-logo-svgrepo-com.svg" },
-    { name: "Airbnb", logo: "/images/company-logo/airbnb-2-logo-svgrepo-com.svg" },
-    { name: "BMW", logo: "/images/company-logo/bmw-logo-svgrepo-com.svg" },
-    { name: "Coca-Cola", logo: "/images/company-logo/coca-cola-logo-svgrepo-com.svg" },
-    { name: "Chanel", logo: "/images/company-logo/chanel-2-logo-svgrepo-com.svg" },
-    { name: "Heineken", logo: "/images/company-logo/heineken-14-logo-svgrepo-com.svg" },
-    { name: "Instagram", logo: "/images/company-logo/instagram-2-1-logo-svgrepo-com.svg" },
-    { name: "Mastercard", logo: "/images/company-logo/mastercard-2-logo-svgrepo-com.svg" },
-    { name: "McDonald's", logo: "/images/company-logo/mcdonald-s-15-logo-svgrepo-com.svg" },
-    { name: "Microsoft", logo: "/images/company-logo/microsoft-logo-svgrepo-com.svg" },
-    { name: "SoundCloud", logo: "/images/company-logo/soundcloud-logo-svgrepo-com.svg" },
-    { name: "Spotify", logo: "/images/company-logo/spotify-1-logo-svgrepo-com.svg" },
+    { name: "Google", logo: "https://brandlogos.net/wp-content/uploads/2026/01/swappa-logo_brandlogos.net_zrwvw-768x152.png" },
+    { name: "Apple", logo: "https://brandlogos.net/wp-content/uploads/2025/12/amx-logo_brandlogos.net_1mu4b-1536x357.png" },
+    { name: "Uber", logo: "https://brandlogos.net/wp-content/uploads/2016/11/harman-logo-preview.png" },
+    { name: "Airbnb", logo: "https://brandlogos.net/wp-content/uploads/2026/01/unive-logo_brandlogos.net_aem9w-1536x477.png" },
+    { name: "BMW", logo: "https://brandlogos.net/wp-content/uploads/2025/12/cadooz-logo_brandlogos.net_hxpc9-1536x205.png" },
+    { name: "Coca-Cola", logo: "https://brandlogos.net/wp-content/uploads/2025/10/blik-logo_brandlogos.net_ms2u2-1536x729.png" },
+    { name: "Tesla", logo: "https://brandlogos.net/wp-content/uploads/2017/02/supreme-logo_brandlogos.net_idzmk.png" },
+    { name: "Netflix", logo: "https://brandlogos.net/wp-content/uploads/2015/07/lenovo-logo_brandlogos.net_kdlrw.png" },
+    { name: "Instagram", logo: "https://brandlogos.net/wp-content/uploads/2025/01/intel_2006-logo_brandlogos.net_vatnn.png" },
+    { name: "Mastercard", logo: "https://brandlogos.net/wp-content/uploads/2011/08/asus-logo-vector.png" },
+    { name: "McDonald's", logo: "https://brandlogos.net/wp-content/uploads/2012/12/nvidia-logo-vector.png" },
+    { name: "Microsoft", logo: "https://brandlogos.net/wp-content/uploads/2021/04/xiaomi-logo_brandlogos.net_dam1r.png" },
+    { name: "SoundCloud", logo: "https://brandlogos.net/wp-content/uploads/2026/01/swappa-logo_brandlogos.net_zrwvw-768x152.png" },
+    { name: "Spotify", logo: "https://brandlogos.net/wp-content/uploads/2011/08/cisco-logo-vector.png" }
   ];
+
+
 
   // FAQ Data
   const faqs = [
@@ -538,10 +540,10 @@ export default function Home() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1 }}
-              className="mb-8"
+              className="mb-8 mt-16 md:mt-0"
             >
               <motion.div
-                className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-orange-500/20 to-red-500/20 backdrop-blur-xl rounded-full border border-orange-500/30 mb-8 group hover:from-orange-500/30 hover:to-red-500/30 transition-all duration-300"
+                className="inline-flex items-center space-x-2 px-4 py-2 md:px-6 md:py-3 bg-gradient-to-r from-orange-500/20 to-red-500/20 backdrop-blur-xl rounded-full border border-orange-500/30 mb-8 group hover:from-orange-500/30 hover:to-red-500/30 transition-all duration-300"
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
@@ -550,7 +552,7 @@ export default function Home() {
                 <div className="flex -space-x-2">
                   <div className="inline-block h-6 w-6 rounded-full ring-2 ring-white overflow-hidden">
                     <Image
-                      src="/images/user1.jpg"
+                      src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop"
                       alt="User 1"
                       width={24}
                       height={24}
@@ -559,7 +561,7 @@ export default function Home() {
                   </div>
                   <div className="inline-block h-6 w-6 rounded-full ring-2 ring-white overflow-hidden">
                     <Image
-                      src="/images/user2.jpg"
+                      src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop"
                       alt="User 2"
                       width={24}
                       height={24}
@@ -568,7 +570,7 @@ export default function Home() {
                   </div>
                   <div className="inline-block h-6 w-6 rounded-full ring-2 ring-white overflow-hidden">
                     <Image
-                      src="/images/user3.jpg"
+                      src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop"
                       alt="User 3"
                       width={24}
                       height={24}
@@ -577,8 +579,8 @@ export default function Home() {
                   </div>
                 </div>
 
-                <span className="text-white text-sm font-medium">
-                  Trusted by 10,000+ professionals
+                <span className="text-white text-xs md:text-sm font-medium">
+                  Trusted by 1000+ professionals
                 </span>
               </motion.div>
             </motion.div>
@@ -685,14 +687,10 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 1.3 }}
-          className="absolute bottom-8 left-0 right-0 z-20"
+          className="absolute bottom-2 md:bottom-8 left-0 right-0 z-20"
         >
           <div className="container-custom">
             <div className="relative">
-              {/* Fade effect overlays */}
-              <div className="absolute left-0 top-0 w-32 h-full bg-gradient-to-r from-black to-transparent z-10"></div>
-              <div className="absolute right-0 top-0 w-32 h-full bg-gradient-to-l from-black to-transparent z-10"></div>
-
               {/* Company logos */}
               <div className="flex items-center justify-center space-x-12 overflow-hidden">
                 {companyLogos.map((company, index) => (
@@ -746,7 +744,7 @@ export default function Home() {
         {/* Background Effects */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-orange-500/2 via-red-500/1 to-orange-400/2"></div>
-          
+
           {/* Animated Beam Background */}
           <div className="absolute inset-0 overflow-hidden">
             {/* Beam 1 - Diagonal */}
@@ -766,7 +764,7 @@ export default function Home() {
                 left: "20%"
               }}
             />
-            
+
             {/* Beam 2 - Horizontal */}
             <motion.div
               className="absolute top-1/3 left-0 right-0 h-3 bg-gradient-to-r from-transparent via-red-500/40 to-transparent blur"
@@ -781,7 +779,7 @@ export default function Home() {
                 delay: 2,
               }}
             />
-            
+
             {/* Beam 3 - Vertical */}
             <motion.div
               className="absolute top-0 bottom-0 right-1/4 w-3 bg-gradient-to-b from-transparent via-orange-400/40 to-transparent blur"
@@ -796,7 +794,7 @@ export default function Home() {
                 delay: 1,
               }}
             />
-            
+
             {/* Beam 4 - Diagonal Reverse */}
             <motion.div
               className="absolute top-0 right-0 w-3 h-full bg-gradient-to-b from-transparent via-red-400/60 to-transparent blur"
@@ -815,7 +813,7 @@ export default function Home() {
                 right: "30%"
               }}
             />
-            
+
             {/* Beam 5 - Cross Pattern */}
             <motion.div
               className="absolute top-1/2 left-1/2 w-3 h-40 bg-gradient-to-b from-transparent via-orange-500/60 to-transparent blur"
@@ -833,7 +831,7 @@ export default function Home() {
                 transform: "translateX(-50%) translateY(-50%)"
               }}
             />
-            
+
             {/* Beam 6 - Cross Pattern Horizontal */}
             <motion.div
               className="absolute top-1/2 left-1/2 w-40 h-3 bg-gradient-to-r from-transparent via-red-500/60 to-transparent blur"
@@ -852,7 +850,7 @@ export default function Home() {
               }}
             />
           </div>
-          
+
           <motion.div
             className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"
             animate={{
@@ -935,42 +933,42 @@ export default function Home() {
               return (
                 <motion.div
                   key={feature.title}
-                  initial={{ 
-                    opacity: 0, 
+                  initial={{
+                    opacity: 0,
                     scale: 0.5,
                     y: 50,
                     filter: "blur(8px)"
                   }}
-                  whileInView={{ 
-                    opacity: 1, 
+                  whileInView={{
+                    opacity: 1,
                     scale: 1,
                     y: 0,
                     filter: "blur(0px)"
                   }}
-                  transition={{ 
-                    duration: 0.8, 
+                  transition={{
+                    duration: 0.8,
                     delay: animationDelay,
                     ease: "easeOut",
                     type: "spring",
                     stiffness: 80
                   }}
-                  whileHover={{ 
-                    y: -8, 
+                  whileHover={{
+                    y: -8,
                     scale: 1.05,
                     transition: { duration: 0.3, ease: "easeOut" }
                   }}
-                  className="relative group h-80"
+                  className="relative group h-64 w-64 mx-auto md:w-auto md:h-80 md:mx-0"
                   viewport={{ once: true, margin: "-100px" }}
                 >
                   {/* Hexagonal Container */}
                   <motion.div
-                    className="relative bg-gradient-to-br from-white/25 via-white/20 to-white/15 backdrop-blur-xl border-2 rounded-lg border-orange-500/30 p-8 shadow-2xl group-hover:shadow-3xl overflow-hidden h-full flex flex-col transform-gpu"
-                    initial={{ 
+                    className="relative bg-gradient-to-br from-white/25 via-white/20 to-white/15 backdrop-blur-xl border-2 rounded-lg border-orange-500/30 p-6 md:p-8 shadow-2xl group-hover:shadow-3xl overflow-hidden h-full flex flex-col transform-gpu"
+                    initial={{
                       clipPath: "polygon(50% 0%, 50% 0%, 50% 100%, 50% 100%)",
                       scale: 0.7,
                       rotate: 0
                     }}
-                    whileInView={{ 
+                    whileInView={{
                       clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
                       scale: 1,
                       rotate: 0
@@ -979,8 +977,8 @@ export default function Home() {
                       scale: 1.02,
                       transition: { duration: 0.3, ease: "easeOut" }
                     }}
-                    transition={{ 
-                      duration: 1.0, 
+                    transition={{
+                      duration: 1.0,
                       delay: animationDelay + 0.1,
                       ease: "easeOut"
                     }}
@@ -1014,7 +1012,7 @@ export default function Home() {
                         backgroundImage: `linear-gradient(60deg, rgba(249, 115, 22, 0.2) 25%, transparent 25%, transparent 75%, rgba(249, 115, 22, 0.2) 75%)`,
                         backgroundSize: '30px 30px'
                       }}></div>
-                      
+
                       {/* Glowing Background on Hover */}
                       <motion.div
                         className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-red-500/15 to-orange-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
@@ -1029,8 +1027,8 @@ export default function Home() {
                       className="absolute top-1/2 -left-2 w-4 h-0.5 bg-gradient-to-r from-orange-500 to-red-500"
                       initial={{ scaleX: 0 }}
                       whileInView={{ scaleX: 1 }}
-                      transition={{ 
-                        duration: 0.8, 
+                      transition={{
+                        duration: 0.8,
                         delay: animationDelay + 0.3,
                         ease: "easeOut"
                       }}
@@ -1039,8 +1037,8 @@ export default function Home() {
                       className="absolute top-1/2 -right-2 w-4 h-0.5 bg-gradient-to-l from-red-500 to-orange-500"
                       initial={{ scaleX: 0 }}
                       whileInView={{ scaleX: 1 }}
-                      transition={{ 
-                        duration: 0.8, 
+                      transition={{
+                        duration: 0.8,
                         delay: animationDelay + 0.4,
                         ease: "easeOut"
                       }}
@@ -1049,12 +1047,12 @@ export default function Home() {
                     <div className="relative z-10 flex flex-col h-full">
                       {/* Hexagonal Icon - Fixed Animation */}
                       <motion.div
-                        className="flex justify-center mb-6 flex-shrink-0"
-                        initial={{ 
+                        className="flex justify-center mb-4 md:mb-6 flex-shrink-0"
+                        initial={{
                           scale: 0,
                           opacity: 0
                         }}
-                        whileInView={{ 
+                        whileInView={{
                           scale: 1,
                           opacity: 1
                         }}
@@ -1062,8 +1060,8 @@ export default function Home() {
                           scale: 1.1,
                           transition: { duration: 0.3, ease: "easeOut" }
                         }}
-                        transition={{ 
-                          duration: 0.7, 
+                        transition={{
+                          duration: 0.7,
                           delay: animationDelay + 0.2,
                           ease: "easeOut",
                           type: "spring",
@@ -1072,27 +1070,27 @@ export default function Home() {
                       >
                         <div className="relative">
                           <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl blur-lg opacity-90 group-hover:opacity-100 transition-opacity duration-300"></div>
-                          <motion.div 
-                            className="relative w-16 h-16 bg-gradient-to-br from-orange-500 via-orange-400 to-red-500 rounded-2xl flex items-center justify-center shadow-2xl border border-orange-400/50 group-hover:shadow-orange-500/50 transition-all duration-300"
+                          <motion.div
+                            className="relative w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-orange-500 via-orange-400 to-red-500 rounded-2xl flex items-center justify-center shadow-2xl border border-orange-400/50 group-hover:shadow-orange-500/50 transition-all duration-300"
                             whileHover={{
                               boxShadow: "0 20px 40px rgba(249, 115, 22, 0.5)",
                               transition: { duration: 0.3 }
                             }}
                           >
-                            <feature.icon className="text-2xl text-white drop-shadow-lg" />
+                            <feature.icon className="text-xl md:text-2xl text-white drop-shadow-lg" />
                           </motion.div>
                         </div>
                       </motion.div>
 
                       {/* Hexagonal Title */}
                       <motion.h3
-                        className="text-lg font-bold text-white mb-4 text-center leading-tight flex-shrink-0"
-                        initial={{ 
+                        className="text-base md:text-lg font-bold text-white mb-2 md:mb-4 text-center leading-tight flex-shrink-0"
+                        initial={{
                           opacity: 0,
                           y: 20,
                           scale: 0.9
                         }}
-                        whileInView={{ 
+                        whileInView={{
                           opacity: 1,
                           y: 0,
                           scale: 1
@@ -1102,8 +1100,8 @@ export default function Home() {
                           y: -2,
                           transition: { duration: 0.3 }
                         }}
-                        transition={{ 
-                          duration: 0.6, 
+                        transition={{
+                          duration: 0.6,
                           delay: animationDelay + 0.4,
                           ease: "easeOut"
                         }}
@@ -1112,13 +1110,13 @@ export default function Home() {
                       </motion.h3>
 
                       {/* Hexagonal Description */}
-                      <motion.p 
-                        className="text-gray-300 text-center leading-relaxed text-sm flex-grow"
-                        initial={{ 
+                      <motion.p
+                        className="text-gray-300 text-center leading-relaxed text-xs md:text-sm flex-grow"
+                        initial={{
                           opacity: 0,
                           y: 15
                         }}
-                        whileInView={{ 
+                        whileInView={{
                           opacity: 1,
                           y: 0
                         }}
@@ -1126,15 +1124,15 @@ export default function Home() {
                           scale: 1.02,
                           transition: { duration: 0.3 }
                         }}
-                        transition={{ 
-                          duration: 0.6, 
+                        transition={{
+                          duration: 0.6,
                           delay: animationDelay + 0.6,
                           ease: "easeOut"
                         }}
                       >
                         {feature.description}
                       </motion.p>
-                      
+
                       {/* Hexagonal Accent Line */}
                       <motion.div
                         className="mt-4 h-0.5 bg-gradient-to-r from-transparent via-orange-500 to-transparent mx-auto flex-shrink-0"
@@ -1145,8 +1143,8 @@ export default function Home() {
                           scaleX: 1.2,
                           transition: { duration: 0.3 }
                         }}
-                        transition={{ 
-                          duration: 0.8, 
+                        transition={{
+                          duration: 0.8,
                           delay: animationDelay + 0.8,
                           ease: "easeOut"
                         }}
@@ -1165,7 +1163,7 @@ export default function Home() {
         {/* Background Effects */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-orange-500/2 via-red-500/1 to-orange-400/2"></div>
-          
+
           {/* Animated Beam Background */}
           <div className="absolute inset-0 overflow-hidden">
             {/* Beam 1 - Diagonal */}
@@ -1185,7 +1183,7 @@ export default function Home() {
                 left: "20%"
               }}
             />
-            
+
             {/* Beam 2 - Horizontal */}
             <motion.div
               className="absolute top-1/3 left-0 right-0 h-3 bg-gradient-to-r from-transparent via-red-500/40 to-transparent blur"
@@ -1200,7 +1198,7 @@ export default function Home() {
                 delay: 2,
               }}
             />
-            
+
             {/* Beam 3 - Vertical */}
             <motion.div
               className="absolute top-0 bottom-0 right-1/4 w-3 bg-gradient-to-b from-transparent via-orange-400/40 to-transparent blur"
@@ -1215,7 +1213,7 @@ export default function Home() {
                 delay: 1,
               }}
             />
-            
+
             {/* Beam 4 - Diagonal Reverse */}
             <motion.div
               className="absolute top-0 right-0 w-3 h-full bg-gradient-to-b from-transparent via-red-400/60 to-transparent blur"
@@ -1234,7 +1232,7 @@ export default function Home() {
                 right: "30%"
               }}
             />
-            
+
             {/* Beam 5 - Cross Pattern */}
             <motion.div
               className="absolute top-1/2 left-1/2 w-3 h-40 bg-gradient-to-b from-transparent via-orange-500/60 to-transparent blur"
@@ -1252,7 +1250,7 @@ export default function Home() {
                 transform: "translateX(-50%) translateY(-50%)"
               }}
             />
-            
+
             {/* Beam 6 - Cross Pattern Horizontal */}
             <motion.div
               className="absolute top-1/2 left-1/2 w-40 h-3 bg-gradient-to-r from-transparent via-red-500/60 to-transparent blur"
@@ -1271,7 +1269,7 @@ export default function Home() {
               }}
             />
           </div>
-          
+
           <motion.div
             className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"
             animate={{
@@ -1402,8 +1400,8 @@ export default function Home() {
                   <div className="absolute -inset-1 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-3xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
 
                   <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-3xl border border-white/20 shadow-xl group-hover:shadow-2xl transition-all duration-500">
-                    <JobCard 
-                      job={job} 
+                    <JobCard
+                      job={job}
                       onApply={() => router.push(`/jobs/${job._id}`)}
                     />
                   </div>
@@ -1419,7 +1417,7 @@ export default function Home() {
         {/* Background Effects */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-orange-500/2 via-red-500/1 to-orange-400/2"></div>
-          
+
           {/* Animated Beam Background */}
           <div className="absolute inset-0 overflow-hidden">
             {/* Beam 1 - Diagonal */}
@@ -1439,7 +1437,7 @@ export default function Home() {
                 left: "20%"
               }}
             />
-            
+
             {/* Beam 2 - Horizontal */}
             <motion.div
               className="absolute top-1/3 left-0 right-0 h-3 bg-gradient-to-r from-transparent via-red-500/40 to-transparent blur"
@@ -1454,7 +1452,7 @@ export default function Home() {
                 delay: 2,
               }}
             />
-            
+
             {/* Beam 3 - Vertical */}
             <motion.div
               className="absolute top-0 bottom-0 right-1/4 w-3 bg-gradient-to-b from-transparent via-orange-400/40 to-transparent blur"
@@ -1470,7 +1468,7 @@ export default function Home() {
               }}
             />
           </div>
-          
+
           <motion.div
             className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"
             animate={{

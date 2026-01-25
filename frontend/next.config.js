@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   images: {
-    domains: ['localhost'],
+    domains: ['localhost', 'brandlogos.net', 'images.unsplash.com', 'www.svgrepo.com', 'ui-avatars.com'],
   },
   env: {
     API_BASE_URL: process.env.API_BASE_URL || 'http://localhost:5000/api',

@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { 
-  FaMapMarkerAlt, 
-  FaClock, 
-  FaDollarSign, 
+import {
+  FaMapMarkerAlt,
+  FaClock,
+  FaDollarSign,
   FaBuilding,
   FaArrowRight,
   FaStar,
@@ -45,7 +45,7 @@ export default function JobCard({ job, onApply, viewMode = 'grid' }) {
 
   const formatSalary = (salary, salaryType = 'Annual') => {
     if (!salary) return 'Not specified';
-    
+
     const formatter = new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -62,7 +62,7 @@ export default function JobCard({ job, onApply, viewMode = 'grid' }) {
     } else if (lowerType.includes('hour')) {
       suffix = ' Hourly';
     }
-    
+
     return `${formatted}${suffix}`;
   };
 
@@ -118,7 +118,7 @@ export default function JobCard({ job, onApply, viewMode = 'grid' }) {
                 <FaMapMarkerAlt className="w-4 h-4 mr-2 flex-shrink-0" />
                 <span className="text-sm">{job.location}</span>
               </div>
-              
+
               {job.salary && (
                 <div className="flex items-center text-gray-300">
                   <FaDollarSign className="w-4 h-4 mr-2 flex-shrink-0" />
@@ -140,7 +140,7 @@ export default function JobCard({ job, onApply, viewMode = 'grid' }) {
             {job.tags && job.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-4">
                 {job.tags.slice(0, 5).map((tag, index) => (
-                  <span 
+                  <span
                     key={index}
                     className="px-3 py-1 bg-white/10 border border-white/20 rounded-full text-xs text-gray-300"
                   >
@@ -157,27 +157,26 @@ export default function JobCard({ job, onApply, viewMode = 'grid' }) {
           </div>
 
           <div className="flex flex-col items-end space-y-3 ml-6">
-            <Link 
+            <Link
               href={`/jobs/${job._id}`}
               className="inline-flex items-center px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white hover:bg-white/20 transition-all duration-300 text-sm"
             >
               <FaArrowRight className="mr-2" />
               View Job
             </Link>
-            
+
             <button
               onClick={onApply}
               disabled={user && !isVerified}
-              className={`px-6 py-2 rounded-xl font-semibold transition-all duration-300 ${
-                user && !isVerified 
-                  ? 'bg-gray-500/50 cursor-not-allowed text-gray-400' 
+              className={`px-6 py-2 rounded-xl font-semibold transition-all duration-300 ${user && !isVerified
+                  ? 'bg-gray-500/50 cursor-not-allowed text-gray-400'
                   : 'bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600'
-              }`}
+                }`}
               title={user && !isVerified ? 'Please verify your email to apply.' : ''}
             >
               Apply Now
             </button>
-            
+
             {user && !isVerified && (
               <p className="text-xs text-orange-400 text-center max-w-32">
                 Please verify your email to apply
@@ -200,17 +199,17 @@ export default function JobCard({ job, onApply, viewMode = 'grid' }) {
       <Link href={`/jobs/${job._id}`}>
         <div className="mb-4">
           {/* Header */}
-          <div className="flex justify-between items-start mb-4">
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-white group-hover:text-orange-400 transition-colors mb-2">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-4">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-semibold text-white group-hover:text-orange-400 transition-colors mb-2 break-words">
                 {job.title}
               </h3>
               <div className="flex items-center text-gray-300 mb-2">
-                <FaBuilding className="w-4 h-4 mr-2" />
-                <span className="text-sm">{job.employer?.company || job.company}</span>
+                <FaBuilding className="w-4 h-4 mr-2 flex-shrink-0" />
+                <span className="text-sm truncate">{job.employer?.company || job.company}</span>
               </div>
             </div>
-            <div className={`px-3 py-1 rounded-full text-xs font-medium border ${getJobTypeBadge(job.jobType)}`}>
+            <div className={`self-start sm:self-auto px-3 py-1 rounded-full text-xs font-medium border ${getJobTypeBadge(job.jobType)} flex-shrink-0`}>
               {job.jobType.replace('-', ' ')}
             </div>
           </div>
@@ -221,7 +220,7 @@ export default function JobCard({ job, onApply, viewMode = 'grid' }) {
               <FaMapMarkerAlt className="w-4 h-4 mr-2 flex-shrink-0" />
               <span className="text-sm">{job.location}</span>
             </div>
-            
+
             {job.salary && (
               <div className="flex items-center text-gray-300">
                 <FaDollarSign className="w-4 h-4 mr-2 flex-shrink-0" />
@@ -251,7 +250,7 @@ export default function JobCard({ job, onApply, viewMode = 'grid' }) {
           {job.tags && job.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
               {job.tags.slice(0, 3).map((tag, index) => (
-                <span 
+                <span
                   key={index}
                   className="px-2 py-1 bg-white/10 border border-white/20 rounded-full text-xs text-gray-300"
                 >
@@ -278,21 +277,20 @@ export default function JobCard({ job, onApply, viewMode = 'grid' }) {
           </div>
         </div>
       </Link>
-      
+
       <button
         onClick={onApply}
         disabled={user && !isVerified}
-        className={`w-full py-3 mt-4 rounded-xl font-semibold transition-all duration-300 ${
-          user && !isVerified 
-            ? 'bg-gray-500/50 cursor-not-allowed text-gray-400' 
+        className={`w-full py-3 mt-4 rounded-xl font-semibold transition-all duration-300 ${user && !isVerified
+            ? 'bg-gray-500/50 cursor-not-allowed text-gray-400'
             : 'bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600'
-        }`}
+          }`}
         title={user && !isVerified ? 'Please verify your email to apply.' : ''}
       >
         <FaRocket className="inline mr-2" />
         Apply Now
       </button>
-      
+
       {user && !isVerified && (
         <p className="text-xs text-orange-400 mt-2 text-center">
           Please verify your email to apply for jobs.
