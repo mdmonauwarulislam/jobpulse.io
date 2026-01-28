@@ -19,6 +19,7 @@ const employerRoutes = require('./routes/employerRoutes');
 const skillRoutes = require('./routes/skillRoutes');
 const chatRoutes = require('./routes/chatRoutes');           // Chat/messaging routes
 const notificationRoutes = require('./routes/notificationRoutes'); // Notification routes
+const resumeRoutes = require('./routes/resumeRoutes'); // Resume routes
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -65,6 +66,7 @@ app.use('/api/employers', employerRoutes);
 app.use('/api/skills', skillRoutes);
 app.use('/api/chat', chatRoutes);               // Chat/messaging routes
 app.use('/api/notifications', notificationRoutes); // Notification routes
+app.use('/api/resumes', resumeRoutes); // Resume routes
 
 // 404 handler - This catches any requests that didn't match the above routes
 app.use('*', (req, res) => {
